@@ -33,6 +33,10 @@
         </div>
     </nav>
 
+    <div v-if="isOffline" class="absolute top-0 left-0 opacity-75 z-10 w-full text-center py-2 bg-red-300 border-r border-red-700 text-white">
+      Sorry, it looks like you're offline
+    </div>
+
     <div class="p-8">
         <div class="w-full p-8 mt-14 bg-white">
           <div class="flex items-center justify-between pb-4">
@@ -230,6 +234,8 @@
 
 <script>
 import { Modal } from 'flowbite';
+import axios from 'axios';
+
 export default {
   "name": "Appointment",
   data() {
@@ -260,6 +266,7 @@ export default {
       ],
       database: null,
       lastObjId: '',
+      isOffline: !navigator.onLine,
     }
   },
   async created() {
@@ -268,12 +275,22 @@ export default {
     this.appointmentObjs = appointmentObjs.reverse();
   },
   mounted() {
-    
+    console.log(this.isOffline);
+    window.addEventListener('offline', () => {
+      this.isOffline = true;
+    });
+
+    window.addEventListener('online', () => {
+      this.isOffline = false;
+    });
+
+    // sync up a user's data with an external api
+    this.syncUserData();
   },
   methods: {
     getDatabase() {
       return new Promise((resolve, reject) => {
-        let db = window.indexedDB.open('appointments');
+        let db = window.indexedDB.open('appointments', 2);
         
         db.onerror = e => {
           reject('Error opening the database');
@@ -467,6 +484,16 @@ export default {
       document.getElementById('addAppointment').classList.remove('hidden');
 
       this.openModal();
+    },
+    async syncUserData() {
+      await axios.get('http://127.0.0.1:8000/api/service-categories', {
+        headers: {
+          Authorization: 'Bearer ' + localStorage.getItem('token')
+        }
+      })
+      .then((response) => {
+          console.log(response);
+      });
     },
   },
 }
