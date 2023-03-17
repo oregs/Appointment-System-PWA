@@ -267,6 +267,13 @@ export default {
     this.appointmentObjs = appointmentObjs.reverse();
 
     await this.fetchAndSaveResourcesLocally();
+    this.service_categories = db.serviceCategories.toArray().then(e => e);
+    this.service_types = db.serviceTypes.toArray();
+    this.branch = db.branch.toArray();
+
+    console.log('Getting Data.....', this.service_categories);
+
+
   },
   mounted() {
     console.log(this.isOffline);
@@ -312,23 +319,25 @@ export default {
     // },
     async getAppointment() {
       return new Promise((resolve, reject) => {
-        this.database.transaction('appointments')
-          .objectStore('appointments')
-          .getAll()
-          .onsuccess = e => {
-            console.log('getAppointment()', e.target.result);
-            resolve(e.target.result);
-          }
+        db.appointments.toArray().then(function(e) {
+          console.log('getAppointment()', e);
+          resolve(e);
+        }).catch((e) => {
+            console.error ("Error uploading data", e);
+        });
+
+        // this.database.transaction('appointments')
+        //   .objectStore('appointments')
+        //   .getAll()
+        //   .onsuccess = e => {
+        //     console.log('getAppointment()', e.target.result);
+        //     resolve(e.target.result);
+        //   }
       });
     },
     async addAppointment() {
 
       return new Promise((resolve, reject) => {
-        let transaction = this.database.transaction('appointments', 'readwrite');
-
-        transaction.oncomplete = (e) => {
-          resolve();
-        }
 
         // Get last Object ID and increment
         let lastObjId = this.appointmentObjs.length > 0 
@@ -351,9 +360,12 @@ export default {
           appointment_date: this.appointment_date
         }
 
-        this.appointmentObjs.unshift(newAppointmentObj);
-        console.log(this.appointmentObjs);
-        transaction.objectStore('appointments').add(newAppointmentObj);
+        db.appointments.add(newAppointmentObj).then(function(lastKey) {
+          console.log('success uploading data');
+          this.appointmentObjs.unshift(newAppointmentObj);
+        }).catch((e) => {
+            console.error ("Error uploading data");
+        });
       }).then(() => {
         this.closeModal();
       });
@@ -488,7 +500,7 @@ export default {
       return new Promise((resolve, reject) => {
         axios.get('http://127.0.0.1:8000/api/appointments/resources')
           .then(res => {
-            console.log(res.data.service_types);
+            // console.log(res.data.service_types);
             this.databaseTransaction(db, 'serviceTypes', res.data.service_types);
             this.databaseTransaction(db, 'branches', res.data.branches);
             this.databaseTransaction(db, 'serviceCategories', res.data.service_categories);
@@ -497,7 +509,7 @@ export default {
     },
     async databaseTransaction(db, table, data){
       await db[table].bulkPut(data).then(function(lastKey) {
-        console.log('success uploading data');
+        console.log('success uploading resources');
       }).catch((e) => {
           console.error ("Error uploading data");
       });

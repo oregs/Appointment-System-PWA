@@ -237,7 +237,7 @@ import { Modal } from 'flowbite';
 import axios from 'axios';
 import { db } from '../db';
 export default {
-  // "name": "Appointment",
+  "name": "Appointment",
   data() {
     return {
       service_category_id:'',
