@@ -5,7 +5,7 @@ import Appointment from '../views/Appointment';
 const routes = [
     { 
         path: '/', 
-        name: 'Login', 
+        name: 'Login',
         component: Login
     },
     { 

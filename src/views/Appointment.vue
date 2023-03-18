@@ -33,7 +33,7 @@
         </div>
     </nav>
 
-    <div v-if="isOffline" class="absolute mt-12 left-0 opacity-75 z-10 w-full text-center py-2 bg-red-300 border-r border-red-700 text-white">
+    <div v-if="isOffline" class="absolute fixed mt-12 left-0 opacity-75 z-10 w-full text-center py-2 bg-red-300 border-r border-red-700 text-white">
       Sorry, it looks like you're offline
     </div>
 
@@ -93,7 +93,7 @@
                                           @change="getServiceTypeOpt"
                                         >
                                           <option selected>Choose Service Type</option>
-                                          <option :value="activeServiceType.id" v-for="activeServiceType in activeServiceTypes.flat(1)" :key="activeServiceType.id">{{ activeServiceType.type }}</option>
+                                          <option :value="activeServiceType.id" v-for="activeServiceType in activeServiceTypes" :key="activeServiceType.id">{{ activeServiceType.type }}</option>
                                         </select>
                                       </div>
                                       <div>
@@ -251,72 +251,34 @@ export default {
       activeAppointmentId: '',
       service_categories: null,
       service_types: null,
-      activeServiceTypes: [],
       branches:null,
-      database: null,
-      serviceCategoryDb:null,
-      serviceTypeDb: null,
-      branchDb: null,
+      activeServiceTypes: [],
       lastObjId: '',
       isOffline: !navigator.onLine,
     }
   },
   async created() {
-    // this.database = await this.getDatabase();    
     let appointmentObjs = await this.getAppointment();
     this.appointmentObjs = appointmentObjs.reverse();
-
+    
     await this.fetchAndSaveResourcesLocally();
-    this.service_categories = db.serviceCategories.toArray().then(e => e);
-    this.service_types = db.serviceTypes.toArray();
-    this.branch = db.branch.toArray();
-
-    console.log('Getting Data.....', this.service_categories);
-
-
   },
   mounted() {
-    console.log(this.isOffline);
     window.addEventListener('offline', () => {
       this.isOffline = true;
     });
 
-    window.addEventListener('online', () => {
+    window.addEventListener('online', async () => {
       this.isOffline = false;
+       // this.database = await this.getDatabase();  
+      this.syncAppointmentData(this.isOffline);
     });
 
+    console.log('Always respond');
     // sync up a user's data with an external api
     // this.syncUserData();
   },
   methods: {
-    // getDatabase() {
-    //   return new Promise((resolve, reject) => {
-    //     let db = window.indexedDB.open('appointmentDB');
-        
-    //     db.onerror = e => {
-    //       reject('Error opening the database');
-    //     }
-
-    //     db.onsuccess = e => {
-    //       console.log("db.onsuccess()", e);
-    //       resolve(e.target.result);
-    //     }
-
-    //     db.onupgradeneeded = e => {
-    //       console.log("db.onupgradeneeded()", e);
-    //       if (e.oldVersion === 1) {
-    //         e.target.result.deleteObjectStore('appointments');
-    //       }
-
-    //       // if (!e.target.result.objectStoreNames.contains('appointments')) {
-    //         e.target.result.createObjectStore('appointments', { keyPath: 'id' });
-    //         e.target.result.createObjectStore('serviceCategories', { keyPath: 'id' });
-    //         e.target.result.createObjectStore('serviceTypes', { keyPath: 'id' });
-    //         e.target.result.createObjectStore('branches', { keyPath: 'id' });
-    //       // }
-    //     }
-    //   });
-    // },
     async getAppointment() {
       return new Promise((resolve, reject) => {
         db.appointments.toArray().then(function(e) {
@@ -325,14 +287,6 @@ export default {
         }).catch((e) => {
             console.error ("Error uploading data", e);
         });
-
-        // this.database.transaction('appointments')
-        //   .objectStore('appointments')
-        //   .getAll()
-        //   .onsuccess = e => {
-        //     console.log('getAppointment()', e.target.result);
-        //     resolve(e.target.result);
-        //   }
       });
     },
     async addAppointment() {
@@ -344,105 +298,91 @@ export default {
           ? this.appointmentObjs[0].id + 1 : 1;
 
         let newAppointmentObj = {
-          id: lastObjId,
-          service_type: {
-            id: this.service_type_id, 
-            type: this.serviceTypeOpt,
-            service_category: {
-              id: this.service_category_id, 
-              category: this.serviceCategoryOpt
-            }
-          },
-          branch: {
-            id: this.branch_id, 
-            name: this.branchOpt
-          },
-          appointment_date: this.appointment_date
-        }
-
-        db.appointments.add(newAppointmentObj).then(function(lastKey) {
-          console.log('success uploading data');
-          this.appointmentObjs.unshift(newAppointmentObj);
-        }).catch((e) => {
-            console.error ("Error uploading data");
-        });
-      }).then(() => {
-        this.closeModal();
-      });
-    },
-    async updateAppointment() {
-      return new Promise((resolve, reject) => {
-        let appointStore = this.database.transaction('appointments', 'readwrite')
-          .objectStore('appointments');
-
-        let appointRequest = appointStore.get(this.activeAppointmentId);
-
-        appointRequest.onerror = (e) => {
-          reject('Error updating appointment in the database');
-        }
-
-        appointRequest.onsuccess = e => {
-          let appointmentObj = e.target.result;
-          appointmentObj = {
-            id: this.activeAppointmentId,
+            service_type_id: this.service_type_id, 
             service_type: {
               id: this.service_type_id, 
               type: this.serviceTypeOpt,
+              service_category_id: this.service_category_id,
               service_category: {
                 id: this.service_category_id, 
                 category: this.serviceCategoryOpt
               }
             },
+            branch_id: this.branch_id,
             branch: {
               id: this.branch_id, 
               name: this.branchOpt
             },
-            appointment_date: this.appointment_date
+            appointment_date: this.appointment_date,
+            isNew: 1,
           }
 
-          // console.log(appointmentObj, e.target.result);
+        db.appointments.add(newAppointmentObj)
+          .then(()=>{
+            this.closeModal();
+          })
+          .catch((e) => {
+            console.error ("Error uploading data");
+        });
 
-          let updateAppointment = appointStore.put(appointmentObj);
+        this.appointmentObjs.unshift(newAppointmentObj);
+        console.log('addAppointment()', this.appointmentObjs);
 
-          updateAppointment.onerror = e => {
-            reject('Error storing the updated appointment in the database')
+      });
+    },
+    async updateAppointment() {
+      return new Promise((resolve, reject) => {
+
+          let appointmentObj = {
+            service_type_id: this.service_type_id, 
+            service_type: {
+              id: this.service_type_id, 
+              type: this.serviceTypeOpt,
+              service_category_id: this.service_category_id,
+              service_category: {
+                id: this.service_category_id, 
+                category: this.serviceCategoryOpt
+              }
+            },
+            branch_id: this.branch_id,
+            branch: {
+              id: this.branch_id, 
+              name: this.branchOpt
+            },
+            appointment_date: this.appointment_date,
+            isUpdate: 1,
           }
 
-          updateAppointment.onsuccess = e => {
-            let appointmentIndex = this.appointmentObjs.findIndex(i => i.id === parseInt(this.activeAppointmentId));
-            this.appointmentObjs[appointmentIndex] = appointmentObj;
-            resolve();
-          }
-        }
+          db.appointments.update(this.activeAppointmentId, appointmentObj)
+            .then((updated) => {
+              if (updated) {
+                let appointmentIndex = this.appointmentObjs.findIndex(i => i.id === this.activeAppointmentId);
+                this.appointmentObjs[appointmentIndex] = appointmentObj;
+                resolve()
+              } else {
+                console.log ("Nothing was updated");
+                reject();
+              }
+            })
+            .catch(e => reject(e));
+ 
       }).then(() => {
         this.closeModal();
       });
     },
     async deleteAppointment(id) {
-      return new Promise((resolve, reject) => {
-        let transaction = this.database.transaction('appointments', 'readwrite')
-          .objectStore('appointments');
+        await db.appointments.delete(id);
 
-        transaction.oncomplete = e => {
-          resolve();
-        };
-
-        transaction.delete(id);
-
-        let appointmentIndex = this.appointmentObjs.findIndex(i => i.id === parseInt(this.activeAppointmentId));
-        this.appointmentObjs.splice(appointmentIndex, 1);
-
-      });      
+        let appointmentIndex = this.appointmentObjs.findIndex(i => i.id === id);
+        this.appointmentObjs.splice(appointmentIndex, 1); 
     },
-    getServiceCategoryOpt(e) {
+    async getServiceCategoryOpt(e) {
       this.serviceCategoryOpt = e.target.options[e.target.options.selectedIndex].text;
       this.activeServiceTypes = [];
 
-      let activeServiceTypes = this.service_types.filter(
-        service_type  => service_type.service_category_id === parseInt(e.target.value)
-      );
-
-      this.activeServiceTypes.push(activeServiceTypes);
+      this.activeServiceTypes = this.service_types.filter(
+        service_type  => service_type.service_category_id === e.target.value
+      );  
     },
     getServiceTypeOpt(e) {
       this.serviceTypeOpt = e.target.options[e.target.options.selectedIndex].text;
@@ -456,11 +396,10 @@ export default {
 
       let appointmentObj = this.appointmentObjs.find(i => id === i.id);
 
-      let activeServiceTypes = this.service_types.filter(
-        service_type  => service_type.service_category_id === parseInt(appointmentObj.service_type.service_category.id)
-      );
 
-      this.activeServiceTypes.push(activeServiceTypes);
+      this.activeServiceTypes = this.service_types.filter(
+        service_type  => service_type.service_category_id == appointmentObj.service_type.service_category_id
+      );  
 
       this.activeAppointmentId = id
       this.service_category_id = appointmentObj.service_type.service_category.id;
@@ -504,26 +443,68 @@ export default {
             this.databaseTransaction(db, 'serviceTypes', res.data.service_types);
             this.databaseTransaction(db, 'branches', res.data.branches);
             this.databaseTransaction(db, 'serviceCategories', res.data.service_categories);
+
+            this.service_types = res.data.service_types
+            this.branches = res.data.branches
+            this.service_categories = res.data.service_categories
+
+            resolve();
           });
       });
     },
     async databaseTransaction(db, table, data){
       await db[table].bulkPut(data).then(function(lastKey) {
-        console.log('success uploading resources');
+        // console.log('success uploading resources');
       }).catch((e) => {
           console.error ("Error uploading data");
       });
     },
-    async syncUyserData() {
-    //   await axios.get('http://127.0.0.1:8000/api/service-categories', {
-    //     headers: {
-    //       Authorization: 'Bearer ' + localStorage.getItem('token')
-    //     }
-    //   })
-    //   .then((response) => {
-    //       console.log(response);
-    //   });
+    async syncAppointmentData(connection) {
+      if (!connection) {
+        console.log('Hello from online................');
+
+        try {
+          const isNewStatus = await this.postToServer('http://127.0.0.1:8000/api/appointments', 'isNew', 1);
+          const isUpdatedStatus = await this.postToServer('http://127.0.0.1:8000/api/appointments/update', 'isUpdated', 1);
+
+          if(isNewStatus || isUpdatedStatus) {
+          // Fetch latest record and update indexedb
+            await this.getAppointmentDataFromServer();
+          }          
+        } catch(e) {
+          console.error(e);
+        }
+      }
     },
+    async postToServer(url, index, value) {
+      return await db.appointments.where(index).equals(value).toArray().then(async newAppointment => {
+        console.log(newAppointment, newAppointment.length);
+        if(newAppointment.length > 0) {
+          console.log('Insie here ooooo');
+          const res = await axios.post(url, newAppointment);
+          if (res.data.status == "success") {
+            return true;
+          }
+        }
+        return false;
+      });
+    },
+    async getAppointmentDataFromServer() {
+      try {
+
+        let res = await axios.get('http://127.0.0.1:8000/api/appointments');
+        console.log(res);
+
+        // clear appointments table (objectStore)
+        db.appointments.clear();
+
+        await this.databaseTransaction(db, 'appointments', res.data.appointments);
+        this.appointmentObjs = res.data.appointments;
+        
+      } catch (e) {
+        console.log(e);
+      }
+    }
   },
 }
 </script>
