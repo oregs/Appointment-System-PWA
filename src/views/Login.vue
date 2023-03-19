@@ -58,9 +58,9 @@ export default {
             await axios.post('login', {
                 email: this.email,
                 password: this.password
-            }).then((response) => {
-                console.log(response);
-                localStorage.setItem('token', response.data.token);
+            }).then((res) => {
+                axios.defaults.headers.common['Authorization'] = 'Bearer ' + res.data.token
+                localStorage.setItem('token', res.data.token);
                 this.$router.push('/appointment');
             });
         }
