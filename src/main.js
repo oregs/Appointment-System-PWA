@@ -6,6 +6,9 @@ import axios from 'axios';
 import "./axios";
 import moment from 'moment';
 
+import VueSweetalert2 from 'vue-sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css';
+
 import './app.css';
 import './registerServiceWorker';
 
@@ -32,5 +35,6 @@ const store = createStore({
 const app = createApp(App)
 app.config.globalProperties.$moment=moment;
 app.use(store);
+app.use(VueSweetalert2)
 app.use(router);
 app.mount('#app');
