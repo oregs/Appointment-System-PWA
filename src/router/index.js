@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Login from '../views/Login';
 import Appointment from '../views/Appointment';
+import Test from '../views/Test';
 
 const routes = [
     { 
@@ -15,6 +16,11 @@ const routes = [
         meta: {
             requiresAuth: true,
         }
+    },
+    {
+        path: '/test', 
+        name: 'Test',
+        component: Test
     },
 ];
 

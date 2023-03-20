@@ -6,13 +6,16 @@ import axios from 'axios';
 import "./axios";
 import moment from 'moment';
 
+import VueSweetalert2 from 'vue-sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css';
+
 import './app.css';
 import './registerServiceWorker';
 
 // import 'bootstrap/dist/css/bootstrap.css';
 // import bootstrap from 'bootstrap/dist/js/bootstrap.bundle.js';
 
-// window.$ = window.jQuery = require('jquery');
+window.$ = window.jQuery = require('jquery');
 
 // global.jQuery = require('jquery');
 // var $ = global.jQuery;
@@ -36,5 +39,6 @@ const store = createStore({
 const app = createApp(App)
 app.config.globalProperties.$moment=moment;
 app.use(store);
+app.use(VueSweetalert2)
 app.use(router);
 app.mount('#app');
