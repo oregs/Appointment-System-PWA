@@ -6,7 +6,7 @@
         <div class="container flex flex-wrap items-center justify-between mx-auto">
             <a href="https://flowbite.com/" class="flex items-center">
                 <img src="https://flowbite.com/docs/images/logo.svg" class="h-6 mr-3 sm:h-9" alt="Flowbite Logo">
-                <span class="self-center text-xl font-semibold whitespace-nowrap dark:text-white">Flowbite</span>
+                <span class="self-center text-xl font-semibold whitespace-nowrap dark:text-white">Appointment System</span>
             </a>
             <div class="flex md:order-2">
               <button type="button" id="profileHover" data-dropdown-trigger="hover" data-dropdown-toggle="profile-dropdown" class="inline-flex items-center justify-center px-4 py-2 text-sm text-gray-500 rounded-lg cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-white">
@@ -199,51 +199,54 @@
                             </td>
                             <td class="px-6 py-4">
                               <button 
+                                v-if="appointmentObj.approval_status === null"
                                 type="button" 
                                 @click="editAppointment(appointmentObj.id)" 
-                                class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                                class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-xs px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
                               >Edit</button>
-                              <button 
+                              <span v-else class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">No further action</span>
+                              <button
+                                v-if="appointmentObj.approval_status === null"
                                 type="button" 
-                                class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900"
+                                class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-xs px-5 py-2.5 mr-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900"
                                 @click="deleteAppointment(appointmentObj.id)" 
                                 >Delete</button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-                <nav class="flex items-center justify-between px-4 py-4 pt-4" aria-label="Table navigation">
-                    <span class="text-sm font-normal text-gray-500 dark:text-gray-400">Showing <span class="font-semibold text-gray-900 dark:text-white">1-10</span> of <span class="font-semibold text-gray-900 dark:text-white">1000</span></span>
-                    <ul class="inline-flex items-center -space-x-px">
-                        <li>
-                            <a href="#" class="block px-3 py-2 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                                <span class="sr-only">Previous</span>
-                                <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">1</a>
-                        </li>
-                        <li>
-                            <a href="#" class="px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">2</a>
-                        </li>
-                        <li>
-                            <a href="#" aria-current="page" class="z-10 px-3 py-2 leading-tight text-blue-600 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white">3</a>
-                        </li>
-                        <li>
-                            <a href="#" class="px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">...</a>
-                        </li>
-                        <li>
-                            <a href="#" class="px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">100</a>
-                        </li>
-                        <li>
-                            <a href="#" class="block px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                                <span class="sr-only">Next</span>
-                                <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
+                <!-- Pagination -->
+                <div>
+                    <nav class="flex items-center justify-between px-4 py-4 pt-4 pagination-row" aria-label="Table navigation">
+                        <span class="text-sm font-normal text-gray-500 dark:text-gray-400">Showing <span class="font-semibold text-gray-900 dark:text-white">1-10</span> of <span class="font-semibold text-gray-900 dark:text-white">1000</span></span>
+                        <ul class="inline-flex items-center -space-x-px" id="paginate-parent">
+                            <li>
+                                <a href="#" class="block px-3 py-2 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                                    <span class="sr-only">Previous</span>
+                                    <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                                </a>
+                            </li>
+                            <li>
+                                <button 
+                                  type="button" 
+                                  class="hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-white text-gray-500 bg-white paginate-button px-3 py-2 leading-tight border border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400"
+                                >1</button>
+
+                            <!-- text-white bg-blue-700 -->
+
+                            </li>
+                            <li>
+                                <a href="#" class="block px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                                    <span class="sr-only">Next</span>
+                                    <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+
               </div>
 
             </div>
@@ -257,9 +260,14 @@
 import { Modal } from 'flowbite';
 import axios from 'axios';
 import { db } from '../db';
+import VSPagination from '@/components/VSPagination.vue';
+import Dexie from 'dexie';
 
 export default {
   "name": "Appointment",
+  components: {
+    VSPagination,
+  },
   data() {
     return {
       service_category_id:'',
@@ -282,13 +290,18 @@ export default {
     }
   },
   async created() {
+    // this.appointmentObjs = await this.paginateData();
+
     let appointmentObjs = await this.getAppointment();
     this.appointmentObjs = appointmentObjs.reverse();
     
     await this.fetchAndSaveResourcesLocally();
-    this.service_categories = await this.getServiceCategories()
-    this.service_types = await this.getServiceTypes()
-    this.branches = await this.getBranches()
+    this.service_categories = await this.getServiceCategories();
+    this.service_types = await this.getServiceTypes();
+    this.branches = await this.getBranches();
+
+    // this.syncAppointmentData(false);
+
   },
   mounted() {
     window.addEventListener('offline', () => {
@@ -297,13 +310,36 @@ export default {
 
     window.addEventListener('online', async () => {
       this.isOffline = false;
-       // this.database = await this.getDatabase();  
+
+    // sync up a user's data with an external api
       this.syncAppointmentData(this.isOffline);
     });
 
-    console.log('Always respond');
-    // sync up a user's data with an external api
-    // this.syncUserData();
+    let prevButton = null;
+    const wrapper = document.getElementById("paginate-parent");
+    var btns = wrapper.getElementsByClassName("paginate-button");
+
+    for (var i = 0; i < btns.length; i++) {
+      if(btns[i].classList.contains('active')) {
+        prevButton = btns[i];
+        break;
+      }
+    }
+
+    wrapper.addEventListener('click', (e) => {
+      const isButton = e.target.nodeName === 'BUTTON'; 
+      if (!isButton) return;
+      
+      e.target.classList.remove('active', 'text-gray-500', 'bg-white', 'hover:bg-gray-100', 'hover:text-gray-700', 'dark:hover:bg-gray-700', 'dark:hover:text-white'); // Add .active CSS Class
+      e.target.classList.add('active', 'text-white', 'bg-blue-700'); // Add .active CSS Class
+
+      if(prevButton !== null) {
+        prevButton.classList.remove('active', 'text-white', 'bg-blue-700');  // Remove .active CSS Class
+        prevButton.classList.add('text-gray-500', 'bg-white', 'hover:bg-gray-100', 'hover:text-gray-700', 'dark:hover:bg-gray-700', 'dark:hover:text-white');  // Remove .active CSS Class
+      }
+      
+      prevButton = e.target;
+    });
   },
   methods: {
     async getServiceTypes() {
@@ -324,14 +360,46 @@ export default {
           .catch(e => console.error("Error uploading fetching branches", e));
       });
     },
+    // async paginateData(offset=0) {
+    //   let newOffset = offset === 0 ? 0 : offset * 10;
+    //   let  appointmentObj = db.appointments;
+
+    //   let data = new Dexie.Promise(function (resolve, reject) {
+    //     return appointmentObj.reverse()
+    //       .offset(newOffset)
+    //       .limit(10)
+    //       .toArray()
+    //       .then(function(e) {
+    //         // console.log('getAppointment()', e.count());
+    //         resolve(e);
+    //     }).catch((e) => reject(e));        
+    //   });
+
+    //   let numberOfRecords = new Dexie.Promise((resolve, reject) => {
+    //       resolve(appointmentObj.count());
+    //   });
+
+    //   let appointmentRecords = await  Promise.all([numberOfRecords, data]);
+  
+    //   return {
+    //     totalRecords: appointmentRecords[0],
+    //     pages: Math.ceil(appointmentRecords[0]/10),
+    //     data: appointmentRecords[1]
+    //   };
+    // },
+    // async navigateTable(offset) {
+    //   // Fetch based on on pages
+    //   this.appointmentObjs = await this.paginateData(offset);
+    // },
     async getAppointment() {
       return new Promise((resolve, reject) => {
         if (!this.isOffline) {
           resolve(this.getAppointmentDataFromServer());
         } else {
           db.appointments.toArray().then(function(e) {
-            console.log('getAppointment()', e);
-            resolve(e);
+            console.log('getAppointment()', e);``
+            let appointmentObj = e.filter((appointment => appointment.isDeleted === undefined))
+            resolve(appointmentObj);
           }).catch((e) => reject(e));
         }
       }).catch((e) => console.error("Error uploading data", e));
@@ -341,27 +409,10 @@ export default {
       return new Promise((resolve, reject) => {
 
         // Get last Object ID and increment
-        let lastObjId = this.appointmentObjs.length > 0 
-          ? this.appointmentObjs[0].id + 1 : 1;
+        // let lastObjId = this.appointmentObjs.length > 0 
+        //   ? this.appointmentObjs[0].id + 1 : 1;
 
-        let newAppointmentObj = {
-          service_type_id: this.service_type_id, 
-          service_type: {
-            id: this.service_type_id, 
-            type: this.serviceTypeOpt,
-            service_category_id: this.service_category_id,
-            service_category: {
-              id: this.service_category_id, 
-              category: this.serviceCategoryOpt
-            }
-          },
-          branch_id: this.branch_id,
-          branch: {
-            id: this.branch_id, 
-            name: this.branchOpt
-          },
-          appointment_date: this.appointment_date,
-        }
+        let newAppointmentObj = this.appointmentData();
 
         if(!this.isOffline) {
 
@@ -369,17 +420,28 @@ export default {
             .then((res) => {
               if (res.data.status === 'success') {
                 this.appointmentObjs.unshift(newAppointmentObj);
-                resolve();
+                this.$swal.fire({
+                  title: 'Success!',
+                  text: 'Appointment request sent',
+                  icon: 'success',
+                  showConfirmButton:false,
+                  timer:1000
+                }).then(() => resolve());
               }
             }).catch((e) => reject("Error uploading data"));  
 
           } else {
-
             newAppointmentObj.isNew = 1;
             db.appointments.add(newAppointmentObj)
-              .then(()=>{
+              .then(() => {
                 this.appointmentObjs.unshift(newAppointmentObj);
-                resolve()
+                this.$swal.fire({
+                  title: 'Success!',
+                  text: 'Appointment request sent',
+                  icon: 'success',
+                  showConfirmButton:false,
+                  timer:1000
+                }).then(() => resolve());
               })
               .catch((e) => {
                 reject("Error uploading data");
@@ -392,24 +454,7 @@ export default {
     async updateAppointment() {
       return new Promise((resolve, reject) => {
 
-        let appointmentObj = {
-          service_type_id: this.service_type_id, 
-          service_type: {
-            id: this.service_type_id, 
-            type: this.serviceTypeOpt,
-            service_category_id: this.service_category_id,
-            service_category: {
-              id: this.service_category_id, 
-              category: this.serviceCategoryOpt
-            }
-          },
-          branch_id: this.branch_id,
-          branch: {
-            id: this.branch_id, 
-            name: this.branchOpt
-          },
-          appointment_date: this.appointment_date,
-        }
+        let appointmentObj = this.appointmentData();
 
         if(!this.isOffline) {
 
@@ -435,10 +480,71 @@ export default {
       }).catch(e => console.error(e));
     },
     async deleteAppointment(id) {
-        await db.appointments.delete(id);
-
-        let appointmentIndex = this.appointmentObjs.findIndex(i => i.id === id);
-        this.appointmentObjs.splice(appointmentIndex, 1); 
+      try {
+        this.$swal.fire({
+            type: 'warning',
+            title: "Are You Sure!",
+            html: `Did you want to proceed to delete this appointment request ?`,
+            showCancelButton: true,
+            confirmButtonText: `Yes, Delete`,
+            cancelButtonColor: '#d33',
+            reverseButtons: true
+        }).then(async (result) => {
+          if(result.value == true){
+            if(!this.isOffline) {
+                await axios.delete(`appointments/${id}`)
+                  .then(async (res) => {
+                  // Fetch latest record and update indexedb
+                  let fetchAppointmentObjs = await this.getAppointmentDataFromServer();
+                  this.appointmentObjs = fetchAppointmentObjs.reverse();
+                });
+            } else {
+              let appointmentObj = this.appointmentObjs.find(i => i.id === id);
+              
+              if (!appointmentObj.isNew) {
+                await db.appointments.update(id, {isDeleted: 1})
+                  .then(() => {
+                      this.$swal.fire({
+                        title: 'Deleted!',
+                        text: 'Appointment deleted.',
+                        icon: 'success',
+                    }).then(async () => {
+                      let appointmentObjs = await this.getAppointment();
+                      this.appointmentObjs = appointmentObjs.reverse();
+                    });
+                  });
+              } else {
+                db.appointments.delete(id);
+                let appointmentIndex = this.appointmentObjs.findIndex(i => i.id === id);
+                this.appointmentObjs.splice(appointmentIndex, 1);
+              }
+            }
+          }
+        }); 
+      } catch(e) {
+        console.error("Nothing was deleted", e); 
+      }
+    },
+    appointmentData() {
+      return {
+        service_type_id: this.service_type_id, 
+        service_type: {
+          id: this.service_type_id, 
+          type: this.serviceTypeOpt,
+          service_category_id: this.service_category_id,
+          service_category: {
+            id: this.service_category_id, 
+            category: this.serviceCategoryOpt
+          }
+        },
+        branch_id: this.branch_id,
+        branch: {
+          id: this.branch_id, 
+          name: this.branchOpt
+        },
+        appointment_date: this.appointment_date,
+        approval_status: null
+      } 
     },
     async getServiceCategoryOpt(e) {
       this.serviceCategoryOpt = e.target.options[e.target.options.selectedIndex].text;
@@ -531,8 +637,9 @@ export default {
           setTimeout(async () => {
             const isNewStatus = await this.postToServer('appointments/store', 'isNew', 1);
             const isUpdatedStatus = await this.postToServer('appointments/update', 'isUpdated', 1);
+            const isDeletedStatus = await this.postToServer('appointments/delete', 'isDeleted', 1);
 
-            if(isNewStatus || isUpdatedStatus) {
+            if(isNewStatus || isUpdatedStatus || isDeletedStatus) {
               // Fetch latest record and update indexedb
               let fetchAppointmentObjs = await this.getAppointmentDataFromServer();
               this.appointmentObjs = fetchAppointmentObjs.reverse();
