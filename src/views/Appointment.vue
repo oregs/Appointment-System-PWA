@@ -177,7 +177,7 @@
                     <tbody>
                         <tr 
                           class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600" 
-                          v-for="appointmentObj in appointmentObjs"
+                          v-for="appointmentObj in appointmentObjs.data"
                           :key="appointmentObj.id"
                         >
                             <td class="px-6 py-4">
@@ -221,27 +221,38 @@
                         <span class="text-sm font-normal text-gray-500 dark:text-gray-400">Showing <span class="font-semibold text-gray-900 dark:text-white">1-10</span> of <span class="font-semibold text-gray-900 dark:text-white">1000</span></span>
                         <ul class="inline-flex items-center -space-x-px" id="paginate-parent">
                             <li>
-                                <a href="#" class="block px-3 py-2 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                                    <span class="sr-only">Previous</span>
-                                    <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                                </a>
-                            </li>
-                            <li>
                                 <button 
                                   type="button" 
-                                  class="hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-white text-gray-500 bg-white paginate-button px-3 py-2 leading-tight border border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400"
-                                >1</button>
+                                  class="paginate-navigators block px-3 py-2 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                                  @click="prevRecord(pageNumber-1)" 
+                                >
+                                    <span class="sr-only">Previous</span>
+                                    <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                                </button>
+                            </li>
+                            <li v-for="(item, index) in new Array(appointmentObjs.pages)" :key="index">
+                                <button 
+                                  type="button" 
+                                  :class="[index === 0 ? 'active text-white bg-blue-700 ' : 'hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-white text-gray-500 bg-white '] + 'paginate-button px-3 py-2 leading-tight border border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400'"
+                                  :data-index="index+1"
+                                  :id="'navigateButton-'+(index+1)" 
+                                  @click="navigateTable(index+1)" 
+                                >{{ index + 1 }}</button>
 
                             <!-- text-white bg-blue-700 -->
 
                             </li>
                             <li>
-                                <a href="#" class="block px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                                <button 
+                                  type="button" 
+                                  class="paginate-navigators block px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                                  @click="nextRecord(pageNumber + 1)"
+                                >
                                     <span class="sr-only">Next</span>
                                     <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                         <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
                                     </svg>
-                                </a>
+                                </button>
                             </li>
                         </ul>
                     </nav>
@@ -287,13 +298,16 @@ export default {
       isOffline: !navigator.onLine,
       isNew: null,
       moment:this.$moment,
+      pageNumber: null,
+      pages: null
     }
   },
   async created() {
-    // this.appointmentObjs = await this.paginateData();
+    this.appointmentObjs = await this.tableData();
+    this.pages = this.appointmentObjs.pages;
 
-    let appointmentObjs = await this.getAppointment();
-    this.appointmentObjs = appointmentObjs.reverse();
+    // let appointmentObjs = await this.getAppointment();
+    // this.appointmentObjs = appointmentObjs.reverse();
     
     await this.fetchAndSaveResourcesLocally();
     this.service_categories = await this.getServiceCategories();
@@ -314,32 +328,6 @@ export default {
     // sync up a user's data with an external api
       this.syncAppointmentData(this.isOffline);
     });
-
-    let prevButton = null;
-    const wrapper = document.getElementById("paginate-parent");
-    var btns = wrapper.getElementsByClassName("paginate-button");
-
-    for (var i = 0; i < btns.length; i++) {
-      if(btns[i].classList.contains('active')) {
-        prevButton = btns[i];
-        break;
-      }
-    }
-
-    wrapper.addEventListener('click', (e) => {
-      const isButton = e.target.nodeName === 'BUTTON'; 
-      if (!isButton) return;
-      
-      e.target.classList.remove('active', 'text-gray-500', 'bg-white', 'hover:bg-gray-100', 'hover:text-gray-700', 'dark:hover:bg-gray-700', 'dark:hover:text-white'); // Add .active CSS Class
-      e.target.classList.add('active', 'text-white', 'bg-blue-700'); // Add .active CSS Class
-
-      if(prevButton !== null) {
-        prevButton.classList.remove('active', 'text-white', 'bg-blue-700');  // Remove .active CSS Class
-        prevButton.classList.add('text-gray-500', 'bg-white', 'hover:bg-gray-100', 'hover:text-gray-700', 'dark:hover:bg-gray-700', 'dark:hover:text-white');  // Remove .active CSS Class
-      }
-      
-      prevButton = e.target;
-    });
   },
   methods: {
     async getServiceTypes() {
@@ -348,53 +336,122 @@ export default {
           .catch(e => console.error("Error fetching service types", e));
       });
     },
+
     async getServiceCategories() {
       return new Promise((resolve, reject) => {
         db.serviceCategories.toArray().then(e => resolve(e))
           .catch(e => console.error("Error uploading fetching service categories", e));
       });
     },
+
     async getBranches() {
       return new Promise((resolve, reject) => {
         db.branches.toArray().then(e => resolve(e))
           .catch(e => console.error("Error uploading fetching branches", e));
       });
     },
-    // async paginateData(offset=0) {
-    //   let newOffset = offset === 0 ? 0 : offset * 10;
-    //   let  appointmentObj = db.appointments;
 
-    //   let data = new Dexie.Promise(function (resolve, reject) {
-    //     return appointmentObj.reverse()
-    //       .offset(newOffset)
-    //       .limit(10)
-    //       .toArray()
-    //       .then(function(e) {
-    //         // console.log('getAppointment()', e.count());
-    //         resolve(e);
-    //     }).catch((e) => reject(e));        
-    //   });
+    async tableData(pageNumber=1) {
+      this.pageNumber = pageNumber;
+      let newOffset = pageNumber === 1 ? 0 : (pageNumber - 1) * 10;
 
-    //   let numberOfRecords = new Dexie.Promise((resolve, reject) => {
-    //       resolve(appointmentObj.count());
-    //   });
+      let  appointmentObj = db.appointments;
 
-    //   let appointmentRecords = await  Promise.all([numberOfRecords, data]);
+      let data = new Dexie.Promise(function (resolve, reject) {
+        return appointmentObj.reverse()
+          .offset(newOffset)
+          .limit(10)
+          .toArray()
+          .then(function(e) {
+            // console.log('getAppointment()', e.count());
+            resolve(e);
+        }).catch((e) => reject(e));        
+      });
+
+      let numberOfRecords = new Dexie.Promise((resolve, reject) => {
+          resolve(appointmentObj.count());
+      });
+
+      let appointmentRecords = await  Promise.all([numberOfRecords, data]);
   
-    //   return {
-    //     totalRecords: appointmentRecords[0],
-    //     pages: Math.ceil(appointmentRecords[0]/10),
-    //     data: appointmentRecords[1]
-    //   };
-    // },
-    // async navigateTable(offset) {
-    //   // Fetch based on on pages
-    //   this.appointmentObjs = await this.paginateData(offset);
-    // },
+      return {
+        totalRecords: appointmentRecords[0],
+        pages: Math.ceil(appointmentRecords[0]/10),
+        data: appointmentRecords[1]
+      };
+    },
+    async navigateTable(pageNumber) {
+      this.pageNumber = pageNumber >= 1 && pageNumber <= this.pages ? pageNumber : pageNumber - 1;
+      console.log(this.pageNumber);
+      this.appointmentObjs = await this.tableData(this.pageNumber);
+
+      
+      let prevButton = null;
+      const wrapper = document.getElementById("paginate-parent");
+      var btns = wrapper.getElementsByClassName("paginate-button");
+
+      for (var i = 0; i < btns.length; i++) {
+        if(btns[i].classList.contains('active')) {
+          prevButton = btns[i];
+          break;
+        }
+      }
+      this.setNavigationStatus(prevButton)
+    },
+
+    async prevRecord(pageNumber) {
+      this.pageNumber = pageNumber >= 1 ? pageNumber : pageNumber + 1;
+      console.log(this.pageNumber);
+      this.appointmentObjs = await this.tableData(this.pageNumber);
+
+      let prevButton = null;
+      const wrapper = document.getElementById("paginate-parent");
+      var btns = wrapper.getElementsByClassName("paginate-button");
+
+      for (var i = 0; i < btns.length; i++) {
+        if(btns[i].classList.contains('active')) {
+          prevButton = btns[i].dataset.index > 1 ? btns[i] : null;
+          break;
+        }
+      }
+
+      this.setNavigationStatus(prevButton)
+    },
+
+    async nextRecord(pageNumber) {
+      this.pageNumber = pageNumber <= this.pages ? pageNumber : pageNumber - 1;
+      console.log(this.pageNumber);
+      this.appointmentObjs = await this.tableData(this.pageNumber);
+
+      let prevButton = null;
+      const wrapper = document.getElementById("paginate-parent");
+      var btns = wrapper.getElementsByClassName("paginate-button");
+
+      for (var i = 0; i < btns.length; i++) {
+        if(btns[i].classList.contains('active')) {
+          prevButton = btns[i].dataset.index < this.pages ? btns[i] : null;
+          break;
+        }
+      }
+      this.setNavigationStatus(prevButton)
+    },
+
+    setNavigationStatus(prevButton) {
+      let currentButton = document.getElementById(`navigateButton-${this.pageNumber}`);
+      currentButton.classList.remove('active', 'text-gray-500', 'bg-white', 'hover:bg-gray-100', 'hover:text-gray-700', 'dark:hover:bg-gray-700', 'dark:hover:text-white');
+      currentButton.classList.add('active', 'text-white', 'bg-blue-700');
+
+      if(prevButton !== null) {
+        prevButton.classList.remove('active', 'text-white', 'bg-blue-700');  // Remove .active CSS Class
+        prevButton.classList.add('text-gray-500', 'bg-white', 'hover:bg-gray-100', 'hover:text-gray-700', 'dark:hover:bg-gray-700', 'dark:hover:text-white');  // Remove .active CSS Class
+      }
+    },
+    
     async getAppointment() {
       return new Promise((resolve, reject) => {
         if (!this.isOffline) {
-          resolve(this.getAppointmentDataFromServer());
+          this.getAppointmentDataFromServer(true);
+          resolve();
         } else {
           db.appointments.toArray().then(function(e) {
             console.log('getAppointment()', e);``
@@ -404,6 +461,7 @@ export default {
         }
       }).catch((e) => console.error("Error uploading data", e));
     },
+
     async addAppointment() {
 
       return new Promise((resolve, reject) => {
@@ -419,7 +477,7 @@ export default {
           axios.post('appointments', newAppointmentObj)
             .then((res) => {
               if (res.data.status === 'success') {
-                this.appointmentObjs.unshift(newAppointmentObj);
+                this.appointmentObjs.data.unshift(newAppointmentObj);
                 this.$swal.fire({
                   title: 'Success!',
                   text: 'Appointment request sent',
@@ -434,7 +492,7 @@ export default {
             newAppointmentObj.isNew = 1;
             db.appointments.add(newAppointmentObj)
               .then(() => {
-                this.appointmentObjs.unshift(newAppointmentObj);
+                this.appointmentObjs.data.unshift(newAppointmentObj);
                 this.$swal.fire({
                   title: 'Success!',
                   text: 'Appointment request sent',
@@ -451,6 +509,7 @@ export default {
         this.closeModal();
       }).catch(e => console.error(e));
     },
+
     async updateAppointment() {
       return new Promise((resolve, reject) => {
 
@@ -459,7 +518,7 @@ export default {
         if(!this.isOffline) {
 
           axios.patch(`appointments/${this.activeAppointmentId}`, appointmentObj)
-            .then((res) => resolve(appointmentObj))
+            .then((res) => resolve())
             .catch((e) => reject(e));  
 
         } else {
@@ -473,12 +532,14 @@ export default {
 
         }
  
-      }).then((appointmentObj) => {
-        let appointmentIndex = this.appointmentObjs.findIndex(i => i.id === this.activeAppointmentId);
-        this.appointmentObjs[appointmentIndex] = appointmentObj;
+      }).then(async (appointmentObj) => {
+        await this.getAppointmentDataFromServer(true);
+        // let appointmentIndex = this.appointmentObjs.data.findIndex(i => i.id === this.activeAppointmentId);
+        // this.appointmentObjs.data[appointmentIndex] = appointmentObj;
         this.closeModal();
       }).catch(e => console.error(e));
     },
+
     async deleteAppointment(id) {
       try {
         this.$swal.fire({
@@ -495,11 +556,11 @@ export default {
                 await axios.delete(`appointments/${id}`)
                   .then(async (res) => {
                   // Fetch latest record and update indexedb
-                  let fetchAppointmentObjs = await this.getAppointmentDataFromServer();
-                  this.appointmentObjs = fetchAppointmentObjs.reverse();
+                  await this.getAppointmentDataFromServer(true);
+                  // this.appointmentObjs = fetchAppointmentObjs.reverse();
                 });
             } else {
-              let appointmentObj = this.appointmentObjs.find(i => i.id === id);
+              let appointmentObj = this.appointmentObjs.data.find(i => i.id === id);
               
               if (!appointmentObj.isNew) {
                 await db.appointments.update(id, {isDeleted: 1})
@@ -509,14 +570,16 @@ export default {
                         text: 'Appointment deleted.',
                         icon: 'success',
                     }).then(async () => {
-                      let appointmentObjs = await this.getAppointment();
-                      this.appointmentObjs = appointmentObjs.reverse();
+                      await this.getAppointmentDataFromServer(true);
+                      // let appointmentObjs = await this.getAppointment();
+                      // this.appointmentObjs = appointmentObjs.reverse();
                     });
                   });
               } else {
                 db.appointments.delete(id);
-                let appointmentIndex = this.appointmentObjs.findIndex(i => i.id === id);
-                this.appointmentObjs.splice(appointmentIndex, 1);
+                await this.getAppointmentDataFromServer(true);
+                // let appointmentIndex = this.appointmentObjs.findIndex(i => i.id === id);
+                // this.appointmentObjs.splice(appointmentIndex, 1);
               }
             }
           }
@@ -525,6 +588,7 @@ export default {
         console.error("Nothing was deleted", e); 
       }
     },
+
     appointmentData() {
       return {
         service_type_id: this.service_type_id, 
@@ -546,6 +610,7 @@ export default {
         approval_status: null
       } 
     },
+
     async getServiceCategoryOpt(e) {
       this.serviceCategoryOpt = e.target.options[e.target.options.selectedIndex].text;
       this.activeServiceTypes = [];
@@ -554,12 +619,15 @@ export default {
         service_type  => service_type.service_category_id === e.target.value
       );  
     },
+
     getServiceTypeOpt(e) {
       this.serviceTypeOpt = e.target.options[e.target.options.selectedIndex].text;
     },
+
     getBranchOpt(e) {
       this.branchOpt = e.target.options[e.target.options.selectedIndex].text;
     },
+
     editAppointment(id) {
       document.getElementById('addAppointment').classList.add('hidden');
       document.getElementById('updateAppointment').classList.remove('hidden');
@@ -569,8 +637,7 @@ export default {
       this.branch_id = '';
       this.appointment_date = '';
 
-      let appointmentObj = this.appointmentObjs.find(i => id === i.id);
-
+      let appointmentObj = this.appointmentObjs.data.find(i => id === i.id);
 
       this.activeServiceTypes = this.service_types.filter(
         service_type  => service_type.service_category_id == appointmentObj.service_type.service_category_id
@@ -588,18 +655,21 @@ export default {
    
       this.openModal();  
     },
+
     openModal() {
       const $targetEl = document.getElementById('appointment-modal');
       const modal = new Modal($targetEl);
       modal.show();
       document.querySelectorAll('*[modal-backdrop]').forEach(backdrop => backdrop.classList.remove('hidden'));
     },
+
     closeModal() {
       const $targetEl = document.getElementById('appointment-modal');
       const modal = new Modal($targetEl);
       modal.hide();
       document.querySelectorAll('*[modal-backdrop]').forEach(backdrop => backdrop.className = 'hidden');
     },
+
     openCreateAppointment() {
       this.service_category_id = '';
       this.service_type_id = '';
@@ -612,6 +682,7 @@ export default {
 
       this.openModal();
     },
+
     async fetchAndSaveResourcesLocally() {
       try {
         const res = await axios.get('appointments/resources');
@@ -624,6 +695,7 @@ export default {
         return e;
       }
     },
+
     async databaseTransaction(db, table, data){
       await db[table].bulkPut(data).then(function(lastKey) {
         // console.log('success uploading resources');
@@ -631,6 +703,7 @@ export default {
           console.error ("Error uploading data");
       });
     },
+
     async syncAppointmentData(connection) {
       if (!connection) {
         try {
@@ -641,8 +714,9 @@ export default {
 
             if(isNewStatus || isUpdatedStatus || isDeletedStatus) {
               // Fetch latest record and update indexedb
-              let fetchAppointmentObjs = await this.getAppointmentDataFromServer();
-              this.appointmentObjs = fetchAppointmentObjs.reverse();
+              await this.getAppointmentDataFromServer(true);
+              // let fetchAppointmentObjs = await this.getAppointmentDataFromServer();
+              // this.appointmentObjs = fetchAppointmentObjs.reverse();
             }          
           }, 1000);
         } catch(e) {
@@ -650,6 +724,7 @@ export default {
         }
       }
     },
+
     async postToServer(url, index, value) {
       return await db.appointments.where(index).equals(value).toArray().then(async newAppointment => {
         console.log(newAppointment, newAppointment.length);
@@ -663,14 +738,20 @@ export default {
         return false;
       });
     },
-    async getAppointmentDataFromServer() {
+
+    async getAppointmentDataFromServer(reloadTable=false) {
       let res = await axios.get('appointments/my-appointments');
 
       // clear appointments table (objectStore)
       db.appointments.clear();
 
       await this.databaseTransaction(db, 'appointments', res.data.appointments);
-      return res.data.appointments;
+      
+      if (reloadTable) {
+        this.appointmentObjs = await this.tableData();
+        this.pages = this.appointmentObjs.pages;
+      }
+      // return res.data.appointments;
     },
   },
 }
