@@ -61,7 +61,15 @@ export default {
             }).then((res) => {
                 axios.defaults.headers.common['Authorization'] = 'Bearer ' + res.data.token
                 localStorage.setItem('token', res.data.token);
-                this.$router.push('/appointment');
+                localStorage.setItem('user', JSON.stringify(res.data.user));
+
+                console.log(res.data.user.isAdmin, res.data.user);
+
+                if (res.data.user.isAdmin) {
+                    this.$router.push('/admin-dashboard');
+                } else {
+                    this.$router.push('/appointment');
+                }
             });
         }
     }

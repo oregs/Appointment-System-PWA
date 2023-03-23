@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Login from '../views/Login';
 import Register from '../views/Register';
 import Appointment from '../views/Appointment';
+import AdminDashboard from '../views/admin/AdminDashboard';
 import Test from '../views/Test';
 
 const routes = [
@@ -21,6 +22,14 @@ const routes = [
         component: Appointment,
         meta: {
             requiresAuth: true,
+        },
+    },
+    {
+        path: '/admin-dashboard',
+        name: 'AdminDashboard',
+        component: AdminDashboard,
+        meta: {
+            requiresAuth: true,
         }
     },
     {
@@ -37,9 +46,13 @@ const router = createRouter({
 
 router.beforeEach((to, from) => {
     // && !auth.isLoggedIn()
+    const getUser = localStorage.getItem('user');
+    const user = JSON.parse(getUser);
+    const token = localStorage.getItem('token');
+
     if (to.matched.some(record => record.meta.requiresAuth)) {
         // this route requires auth, check if logged in
-        if (localStorage.getItem('token')) {
+        if (token) {
             return true;
         } else {
             // if not, redirect to login page.
@@ -51,10 +64,9 @@ router.beforeEach((to, from) => {
         }
     }
 
-    if (localStorage.getItem('token')) {
-        return {
-            path: '/appointment'
-        }
+    if (token && user) {
+        return user.isAdmin ?  { path: '/admin-dashboard' } : { path: '/appointment' };
+        // return user.isAdmin ?  { path: '/admin-dashboard' } : { path: '/appointment' };
     }
 });
 
