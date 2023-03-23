@@ -303,8 +303,8 @@ export default {
     }
   },
   async created() {
-    this.appointmentObjs = await this.tableData();
-    this.pages = this.appointmentObjs.pages;
+    await this.getAppointment();
+    // this.pages = this.appointmentObjs.pages;
 
     // let appointmentObjs = await this.getAppointment();
     // this.appointmentObjs = appointmentObjs.reverse();
@@ -325,7 +325,7 @@ export default {
     window.addEventListener('online', async () => {
       this.isOffline = false;
 
-    // sync up a user's data with an external api
+      // sync up a user's data with an external api
       this.syncAppointmentData(this.isOffline);
     });
   },
@@ -363,8 +363,8 @@ export default {
           .limit(10)
           .toArray()
           .then(function(e) {
-            // console.log('getAppointment()', e.count());
-            resolve(e);
+            let filteredAppointment = e.filter(appointment => appointment.isDeleted === undefined)
+            resolve(filteredAppointment);
         }).catch((e) => reject(e));        
       });
 
@@ -448,18 +448,17 @@ export default {
     },
     
     async getAppointment() {
-      return new Promise((resolve, reject) => {
+      try {
         if (!this.isOffline) {
           this.getAppointmentDataFromServer(true);
-          resolve();
         } else {
-          db.appointments.toArray().then(function(e) {
-            console.log('getAppointment()', e);``
-            let appointmentObj = e.filter((appointment => appointment.isDeleted === undefined))
-            resolve(appointmentObj);
-          }).catch((e) => reject(e));
+          console.log('Inside here ................')
+          this.appointmentObjs = await this.tableData();
+          this.pages = this.appointmentObjs.pages;
         }
-      }).catch((e) => console.error("Error uploading data", e));
+      } catch (e) {
+        console.error("Error uploading data", e);
+      }
     },
 
     async addAppointment() {
@@ -477,14 +476,16 @@ export default {
           axios.post('appointments', newAppointmentObj)
             .then((res) => {
               if (res.data.status === 'success') {
-                this.appointmentObjs.data.unshift(newAppointmentObj);
                 this.$swal.fire({
                   title: 'Success!',
                   text: 'Appointment request sent',
                   icon: 'success',
                   showConfirmButton:false,
                   timer:1000
-                }).then(() => resolve());
+                }).then(async () => {
+                  await this.getAppointmentDataFromServer(true);
+                  resolve();
+                });
               }
             }).catch((e) => reject("Error uploading data"));  
 
@@ -492,14 +493,18 @@ export default {
             newAppointmentObj.isNew = 1;
             db.appointments.add(newAppointmentObj)
               .then(() => {
-                this.appointmentObjs.data.unshift(newAppointmentObj);
+                // this.appointmentObjs.data.unshift(newAppointmentObj);
                 this.$swal.fire({
                   title: 'Success!',
                   text: 'Appointment request sent',
                   icon: 'success',
                   showConfirmButton:false,
                   timer:1000
-                }).then(() => resolve());
+                }).then(async () => {
+                  this.appointmentObjs = await this.tableData();
+                  this.pages = this.appointmentObjs.pages;
+                  resolve();
+                });
               })
               .catch((e) => {
                 reject("Error uploading data");
@@ -518,18 +523,22 @@ export default {
         if(!this.isOffline) {
 
           axios.patch(`appointments/${this.activeAppointmentId}`, appointmentObj)
-            .then((res) => resolve())
+            .then(async (res) => {
+              await this.getAppointmentDataFromServer(true);
+              resolve()
+            })
             .catch((e) => reject(e));  
 
         } else {
 
           appointmentObj.isUpdated = this.isNew ? 0 : 1,
           db.appointments.update(this.activeAppointmentId, appointmentObj)
-            .then((updated) => {
-              updated ? resolve(appointmentObj) : reject("Nothing was updated");
+            .then(async (updated) => {
+              this.appointmentObjs = await this.tableData();
+              this.pages = this.appointmentObjs.pages;
+              resolve();
             })
             .catch(e => reject(e));
-
         }
  
       }).then(async (appointmentObj) => {
@@ -537,7 +546,7 @@ export default {
         // let appointmentIndex = this.appointmentObjs.data.findIndex(i => i.id === this.activeAppointmentId);
         // this.appointmentObjs.data[appointmentIndex] = appointmentObj;
         this.closeModal();
-      }).catch(e => console.error(e));
+      }).catch(e => console.error("Nothing was updated", e));
     },
 
     async deleteAppointment(id) {
@@ -570,14 +579,14 @@ export default {
                         text: 'Appointment deleted.',
                         icon: 'success',
                     }).then(async () => {
-                      await this.getAppointmentDataFromServer(true);
-                      // let appointmentObjs = await this.getAppointment();
-                      // this.appointmentObjs = appointmentObjs.reverse();
+                      this.appointmentObjs = await this.tableData();
+                      this.pages = this.appointmentObjs.pages;
                     });
                   });
               } else {
                 db.appointments.delete(id);
-                await this.getAppointmentDataFromServer(true);
+                this.appointmentObjs = await this.tableData();
+                this.pages = this.appointmentObjs.pages;
                 // let appointmentIndex = this.appointmentObjs.findIndex(i => i.id === id);
                 // this.appointmentObjs.splice(appointmentIndex, 1);
               }
