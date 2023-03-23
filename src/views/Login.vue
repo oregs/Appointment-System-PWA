@@ -71,7 +71,7 @@ export default {
                     this.$router.push('/appointment');
                 }
             });
-        }
+        },
     }
 }
 </script>
