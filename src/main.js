@@ -19,11 +19,24 @@ window.$ = window.jQuery = require('jquery')
 
 
 const store = createStore({
+    state() {
+        return {
+            isAdmin: false,
+            isAuthenticated: false
+        }
+    },
+    mutations: {
+        setIsAdmin(state, isAdmin) {
+            state.isAdmin = isAdmin;
+        },
+        setIsAuthenticated(state, isAuthenticated) {
+            state.isAuthenticated = isAuthenticated;
+        },
+    },
     actions: {
         async logout() {
             await axios.post('logout').then((e) => {
                 if (e.data.status === 'success') {
-                    console.log('logged out');
                     localStorage.removeItem('token');
                     router.push('/');
                 }
@@ -32,9 +45,6 @@ const store = createStore({
         darkModeToggle() {
             const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
             const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
-
-            console.log(themeToggleDarkIcon, themeToggleLightIcon);
-
 
             // Change the icons inside the button based on previous settings
             if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -108,6 +118,7 @@ const store = createStore({
                 });
             }
         }
+
     }
 });
 
