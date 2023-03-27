@@ -71,6 +71,7 @@ export default {
                 } else {
                     this.$router.push('/appointment');
                 }
+                window.location.reload();
             });
         },
     }

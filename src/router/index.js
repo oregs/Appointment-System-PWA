@@ -3,6 +3,10 @@ import Login from '../views/Login';
 import Register from '../views/Register';
 import Appointment from '../views/Appointment';
 import AdminDashboard from '../views/admin/AdminDashboard';
+import ServiceCategory from '../views/admin/ServiceCategory';
+import ServiceType from '../views/admin/ServiceType';
+import Branch from '../views/admin/Branch';
+import AppointmentApproval from '../views/admin/AppointmentApproval';
 import Test from '../views/Test';
 
 const routes = [
@@ -28,6 +32,38 @@ const routes = [
         path: '/admin-dashboard',
         name: 'AdminDashboard',
         component: AdminDashboard,
+        meta: {
+            requiresAuth: true,
+        }
+    },
+    {
+        path: '/appointment-approval',
+        name: 'AppointmentApproval',
+        component: AppointmentApproval,
+        meta: {
+            requiresAuth: true,
+        }
+    },
+    {
+        path: '/service-category',
+        name: 'ServiceCategory',
+        component: ServiceCategory,
+        meta: {
+            requiresAuth: true,
+        }
+    },
+    {
+        path: '/service-type',
+        name: 'ServiceType',
+        component: ServiceType,
+        meta: {
+            requiresAuth: true,
+        }
+    },
+    {
+        path: '/branch',
+        name: 'Branch',
+        component: Branch,
         meta: {
             requiresAuth: true,
         }
