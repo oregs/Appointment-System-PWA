@@ -1,7 +1,7 @@
 import Dexie from 'dexie';
 
 export const db = new Dexie("appointmentDb");
-db.version(3).stores({
+db.version(1).stores({
     appointments: '++id,user_id,service_type_id,approval_status,isNew,isUpdated,isDeleted',
     serviceTypes: '++id,type,service_category_id,isNew,isUpdated',
     serviceCategories: '++id,type,isNew,isUpdated',

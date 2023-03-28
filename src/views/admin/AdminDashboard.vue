@@ -14,7 +14,13 @@
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                     <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
                                 </div>
-                                <input type="text" name="email" id="mobile-search" class="bg-gray-50 border xs:mb-2 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-200 dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Search">
+                                <input 
+                                  type="text" 
+                                  id="mobile-search" 
+                                  class="bg-gray-50 border xs:mb-2 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2.5    dark:bg-gray-700   dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-200 dark:focus:ring-primary-500 dark:focus:border-primary-500" 
+                                  placeholder="Search"
+                                  v-model="search"
+                                >
                                 </div>
                             </div>
                         </div>
@@ -28,6 +34,9 @@
                                     <table class="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600" id="appointmentTable">
                                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                             <tr>
+                                                <th scope="col" class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">
+                                                    Customer Name
+                                                </th>
                                                 <th scope="col" class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">
                                                     Service Category
                                                 </th>
@@ -52,7 +61,10 @@
                                                 :key="appointmentObj.id"
                                             >
                                                 <td class="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
-                                                    {{ appointmentObj.service_type.service_category.category}}
+                                                    {{ appointmentObj.user.FullName}}
+                                                </td>
+                                                <td class="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
+                                                   {{ appointmentObj.service_type.service_category.category}}
                                                 </td>
                                                 <td class="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
                                                     {{ appointmentObj.service_type.type}}
@@ -68,7 +80,7 @@
                                                     <button 
                                                       type="button" 
                                                       @click="approveAppointment(appointmentObj.id)" 
-                                                      class="inline-flex items-center px-3 py-2 focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
+                                                      class="inline-flex items-center px-3 py-2 focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-xs px-5 py-2.5 mr-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
                                                     >
                                                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z">
                                                         </path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path>
@@ -77,7 +89,7 @@
                                                     <button
                                                       data-modal-target="rejectAppointmentModal"
                                                       type="button" 
-                                                      class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900"
+                                                      class="inline-flex items-center px-3 py-2 text-xs font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900"
                                                       @click="openModal(appointmentObj.id)"
                                                     >
                                                         <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -201,7 +213,8 @@
 import axios from 'axios';
 import { db } from '../../db';
 import Dexie from 'dexie';
-import { Modal, initDropdowns, initCollapses, initDismisses } from 'flowbite';
+import { Modal, initDropdowns, initCollapses, initDismisses, Collapse } from 'flowbite';
+import { getTableData } from '@/helper';
 
 export default {
   "name": "AdminDashboard",
@@ -216,7 +229,9 @@ export default {
       isNew: null,
       moment:this.$moment,
       pageNumber: null,
-      pages: null
+      pages: null,
+      collapse: '',
+      search: '',
     }
   },
   async created() {
@@ -224,57 +239,41 @@ export default {
 
     // this.syncAppointmentData(false);
   },
-  mounted() {    
+  mounted() {      
     initDismisses();
     initCollapses();
     initDropdowns();
 
-    window.addEventListener('offline', () => {
-      this.isOffline = true;
-    });
-
-    window.addEventListener('online', async () => {
-      this.isOffline = false;
-
-    // sync up a user's data with an external api
-      this.syncAppointmentData(this.isOffline);
+    window.addEventListener('online', async () => {        
+      this.syncAppointmentData(this.$store.state.isOffline);
     });
   },
   methods: {
-    async tableData(pageNumber=1) {
+    async tableData(pageNumber=1, search) {
       this.pageNumber = pageNumber;
-      let newOffset = pageNumber === 1 ? 0 : (pageNumber - 1) * 10;
 
-      let  appointmentObj = db.appointmentCatalog;
+      // Filter all records
+      let filterRecords = await db.appointmentCatalog
+        .reverse()
+        .filter(function (value) {
+          if (search !== undefined && search !== '') {
+            return value.approval_status === null && (value.service_type.type.toLowerCase().includes(search.toLowerCase()) 
+              || value.service_type.service_category.category.toLowerCase().includes(search.toLowerCase())
+              || value.branch.name.toLowerCase().includes(search.toLowerCase())
+              || value.user.FullName.toLowerCase().includes(search.toLowerCase())
+              || value.appointment_date.includes(search))
+          } else {
+            return value.approval_status === null;
+          }
+        });
 
-      let data = new Dexie.Promise(function (resolve, reject) {
-        return appointmentObj.reverse()
-          .offset(newOffset)
-          .limit(10)
-          .toArray()
-          .then(function(e) {
-            let filteredAppointment = e.filter(appointmentCat => appointmentCat.approval_status === null)
-            resolve(filteredAppointment);
-        }).catch((e) => reject(e));        
-      });
-
-      let numberOfRecords = new Dexie.Promise((resolve, reject) => {
-          resolve(appointmentObj.count());
-      });
-
-      let appointmentRecords = await  Promise.all([numberOfRecords, data]);
-  
-      return {
-        totalRecords: appointmentRecords[0],
-        pages: Math.ceil(appointmentRecords[0]/10),
-        data: appointmentRecords[1]
-      };
+        return await getTableData(filterRecords, pageNumber);
     },
 
     async navigateTable(pageNumber) {
       this.pageNumber = pageNumber >= 1 && pageNumber <= this.pages ? pageNumber : pageNumber - 1;
       console.log(this.pageNumber);
-      this.appointmentObjs = await this.tableData(this.pageNumber);
+      this.appointmentObjs = await this.tableData(this.pageNumber, this.search);
 
       
       let prevButton = null;
@@ -293,7 +292,7 @@ export default {
     async prevRecord(pageNumber) {
       this.pageNumber = pageNumber >= 1 ? pageNumber : pageNumber + 1;
       console.log(this.pageNumber);
-      this.appointmentObjs = await this.tableData(this.pageNumber);
+      this.appointmentObjs = await this.tableData(this.pageNumber, this.search);
 
       let prevButton = null;
       const wrapper = document.getElementById("paginate-parent");
@@ -312,7 +311,7 @@ export default {
     async nextRecord(pageNumber) {
       this.pageNumber = pageNumber <= this.pages ? pageNumber : pageNumber - 1;
       console.log(this.pageNumber);
-      this.appointmentObjs = await this.tableData(this.pageNumber);
+      this.appointmentObjs = await this.tableData(this.pageNumber, this.search);
 
       let prevButton = null;
       const wrapper = document.getElementById("paginate-parent");
@@ -344,6 +343,7 @@ export default {
           console.log('it affect me too...')
           this.getAppointmentDataFromServer(true);
         } else {
+          console.log()
           this.appointmentObjs = await this.tableData();
           this.pages = this.appointmentObjs.pages;
         }
@@ -500,5 +500,11 @@ export default {
       document.querySelectorAll('*[modal-backdrop]').forEach(backdrop => backdrop.className = 'hidden');
     },
   },
+  watch: {
+    async search(searchInput) {
+      this.appointmentObjs = await this.tableData(1, searchInput);
+      this.pages = this.appointmentObjs.pages;
+    }
+  }
 }
 </script>
