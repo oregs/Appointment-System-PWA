@@ -101,31 +101,68 @@ export const updateOne = async ({ url, table, data, tableId, isOffline })  => {
     });
 }
 
-export const getTableData = async (tableName, pageNumber) => {
-    let newOffset = pageNumber === 1 ? 0 : (pageNumber - 1) * 10;
+export const getTableData = async (filterRecords, pageNumber) => {
+  let newOffset = pageNumber === 1 ? 0 : (pageNumber - 1) * 10;
+  // Count of Records
+  let numberOfRecords = filterRecords.count();
+   
+  // Get all Records
+  let data = filterRecords
+    .offset(newOffset)
+    .limit(10)
+    .toArray()
+    .then(function(data) {
+        return data;
+    }).catch((e) => console.log(e));
 
-    let table = db[tableName];
+  let tableRecords = await Promise.all([numberOfRecords, data]);
 
-    let data = new Dexie.Promise(function (resolve, reject) {
-    return table.reverse()
-        .offset(newOffset)
-        .limit(10)
-        .toArray()
-        .then(function(data) {
-            resolve(data);
-        }).catch((e) => reject(e));        
-    });
-
-    let numberOfRecords = new Dexie.Promise((resolve) => {
-        resolve(table.count());
-    });
-
-    let tableRecords = await  Promise.all([numberOfRecords, data]);
-
-    return {
-        totalRecords: tableRecords[0],
-        pages: Math.ceil(tableRecords[0]/10),
-        data: tableRecords[1],
-        currentPageNumber: pageNumber
-    };
+  return {
+      totalRecords: tableRecords[0],
+      pages: Math.ceil(tableRecords[0]/10),
+      data: tableRecords[1],
+      currentPageNumber: pageNumber
+  };
 }
+
+export const inArray = (value, arr) => {
+    if($.inArray(value, arr) === -1)
+    {
+        return true;
+    } 
+    return false;
+}
+
+// export const getTableData = async (tableName, pageNumber, search) => {
+//     let newOffset = pageNumber === 1 ? 0 : (pageNumber - 1) * 10;
+
+//     let table = db[tableName];
+//     // search = 'Obama';
+//     let data = new Dexie.Promise(function (resolve, reject) {
+//       return table.reverse()
+//         .filter(function (value) {
+//           console.log(search, search !== '')
+//           if (search !== undefined) {
+//             return value.service_type.type == search;
+//           } else {
+//             return value;
+//           }
+//         })
+//         .offset(newOffset)
+//         .limit(10)
+//         .toArray()
+//         .then(function(data) {
+//             resolve(data);
+//         }).catch((e) => reject(e));
+//     });
+
+//     let tableRecords = await  Promise.all([data]);
+//     let numberOfRecords = tableRecords[0].length;
+
+//     return {
+//         totalRecords: numberOfRecords,
+//         pages: Math.ceil(numberOfRecords/10),
+//         data: tableRecords[0],
+//         currentPageNumber: pageNumber
+//     };
+// }

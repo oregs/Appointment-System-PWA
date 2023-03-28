@@ -11,7 +11,7 @@
 
     <div class="flex pt-16 overflow-hidden bg-gray-50 dark:bg-gray-900">
 
-      <div class="fixed inset-0 z-10 bg-gray-900/50 dark:bg-gray-900/90 hidden" id="sidebarBackdrop"></div>
+      <!-- <div class="fixed inset-0 z-10 bg-gray-900/50 dark:bg-gray-900/90 hidden" id="sidebarBackdrop"></div> -->
 
       <div id="main-content" class="relative w-full h-full lg:p-6 overflow-y-auto bg-gray-50 dark:bg-gray-900">
         <main>
@@ -27,7 +27,13 @@
                           <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
                       </div>
                       
-                      <input type="text" id="mobile-search" class="bg-gray-50 border xs:mb-2 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-200 dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Search">
+                      <input 
+                        type="text" 
+                        id="mobile-search" 
+                        class="bg-gray-50 border xs:mb-2 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-200 dark:focus:ring-primary-500 dark:focus:border-primary-500" 
+                        placeholder="Search"
+                        v-model="search"
+                      >
                     </div>
                   </div>
                   <!-- Modal toggle -->
@@ -200,7 +206,7 @@
               <!-- Pagination -->
               <div class="flex items-center mb-4 sm:mb-0">
                 <span class="text-sm font-normal text-gray-500 dark:text-gray-400 flex items-center mb-4 sm:mb-0">
-                  Showing <span class="font-semibold text-gray-900 dark:text-white">1-10</span> of <span class="font-semibold text-gray-900 dark:text-white">1000</span>
+                  Showing&nbsp;<span class="font-semibold text-gray-900 dark:text-white">1-10&nbsp;</span>&nbsp;of&nbsp;<span class="font-semibold text-gray-900 dark:text-white">{{ appointmentObjs.totalRecords }}</span>
                 </span>
               </div>
               <div class="flex items-center space-x-3">
@@ -256,7 +262,7 @@ import { Modal, initDropdowns } from 'flowbite';
 import axios from 'axios';
 import { db } from '../db';
 import VSPagination from '@/components/VSPagination.vue';
-import Dexie from 'dexie';
+import { getTableData } from '@/helper';
 
 export default {
   "name": "Appointment",
@@ -283,7 +289,8 @@ export default {
       isNew: null,
       moment:this.$moment,
       pageNumber: null,
-      pages: null
+      pages: null,
+      search: '',
     }
   },
   async created() {
@@ -298,7 +305,6 @@ export default {
 
   },
   mounted() {
-    this.$store.dispatch('sidebarToggle');
     
     initDropdowns();
 
@@ -309,18 +315,7 @@ export default {
     window.addEventListener('online', async () => {
       this.isOffline = false;
 
-    // sync up a user's data with an external api
-      this.syncAppointmentData(this.isOffline);
-    });
-
-    window.addEventListener('offline', () => {
-      this.isOffline = true;
-    });
-
-    window.addEventListener('online', async () => {
-      this.isOffline = false;
-
-    // sync up a user's data with an external api
+      // sync up a user's data with an external api
       this.syncAppointmentData(this.isOffline);
     });
   },
@@ -346,39 +341,28 @@ export default {
       });
     },
 
-    async tableData(pageNumber=1) {
+    async tableData(pageNumber=1, search) {
       this.pageNumber = pageNumber;
-      let newOffset = pageNumber === 1 ? 0 : (pageNumber - 1) * 10;
+      let filterRecords = await db.appointments
+        .reverse()
+        .filter(function (value) {
+          if (search !== undefined && search !== '') {
+            return value.isDeleted === undefined && (value.service_type.type.toLowerCase().includes(search.toLowerCase()) 
+              || value.service_type.service_category.category.toLowerCase().includes(search.toLowerCase())
+              || value.branch.name.toLowerCase().includes(search.toLowerCase())
+              || value.user.FullName.toLowerCase().includes(search.toLowerCase())
+              || value.appointment_date.includes(search))
+          } else {
+            return value.isDeleted === undefined
+          }
+        });
 
-      let  appointmentObj = db.appointments;
-
-      let data = new Dexie.Promise(function (resolve, reject) {
-        return appointmentObj.reverse()
-          .offset(newOffset)
-          .limit(10)
-          .toArray()
-          .then(function(e) {
-            let filteredAppointment = e.filter(appointment => appointment.isDeleted === undefined)
-            resolve(filteredAppointment);
-        }).catch((e) => reject(e));        
-      });
-
-      let numberOfRecords = new Dexie.Promise((resolve, reject) => {
-          resolve(appointmentObj.count());
-      });
-
-      let appointmentRecords = await  Promise.all([numberOfRecords, data]);
-  
-      return {
-        totalRecords: appointmentRecords[0],
-        pages: Math.ceil(appointmentRecords[0]/10),
-        data: appointmentRecords[1]
-      };
+      return await getTableData(filterRecords, pageNumber);
     },
     async navigateTable(pageNumber) {
       this.pageNumber = pageNumber >= 1 && pageNumber <= this.pages ? pageNumber : pageNumber - 1;
       console.log(this.pageNumber);
-      this.appointmentObjs = await this.tableData(this.pageNumber);
+      this.appointmentObjs = await this.tableData(this.pageNumber, this.search);
 
       
       let prevButton = null;
@@ -397,7 +381,7 @@ export default {
     async prevRecord(pageNumber) {
       this.pageNumber = pageNumber >= 1 ? pageNumber : pageNumber + 1;
       console.log(this.pageNumber);
-      this.appointmentObjs = await this.tableData(this.pageNumber);
+      this.appointmentObjs = await this.tableData(this.pageNumber, this.search);
 
       let prevButton = null;
       const wrapper = document.getElementById("paginate-parent");
@@ -416,7 +400,7 @@ export default {
     async nextRecord(pageNumber) {
       this.pageNumber = pageNumber <= this.pages ? pageNumber : pageNumber - 1;
       console.log(this.pageNumber);
-      this.appointmentObjs = await this.tableData(this.pageNumber);
+      this.appointmentObjs = await this.tableData(this.pageNumber, this.search);
 
       let prevButton = null;
       const wrapper = document.getElementById("paginate-parent");
@@ -759,5 +743,11 @@ export default {
       // return res.data.appointments;
     },
   },
+  watch: {
+    async search(searchInput) {
+      this.appointmentObjs = await this.tableData(1, searchInput);
+      this.pages = this.appointmentObjs.pages;
+    }
+  }
 }
 </script>

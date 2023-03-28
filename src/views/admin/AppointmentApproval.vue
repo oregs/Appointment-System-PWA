@@ -14,7 +14,13 @@
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                     <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
                                 </div>
-                                <input type="text" name="email" id="mobile-search" class="bg-gray-50 border xs:mb-2 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-200 dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Search">
+                                <input 
+                                  type="text" 
+                                  v-model="search" 
+                                  id="mobile-search" 
+                                  class="bg-gray-50 border xs:mb-2 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-200 dark:focus:ring-primary-500 dark:focus:border-primary-500" 
+                                  placeholder="Search"
+                                >
                                 </div>
                             </div>
                         </div>
@@ -28,6 +34,9 @@
                                     <table class="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600" id="appointmentTable">
                                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                             <tr>
+                                                <th scope="col" class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">
+                                                    Customer Name
+                                                </th>
                                                 <th scope="col" class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">
                                                     Service Category
                                                 </th>
@@ -51,6 +60,9 @@
                                                 v-for="appointmentObj in appointmentObjs.data"
                                                 :key="appointmentObj.id"
                                             >
+                                                <td class="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
+                                                   {{ appointmentObj.user.FullName}}
+                                                </td>
                                                 <td class="p-4 text-sm font-normal text-gray-500 whitespace-nowrap dark:text-gray-400">
                                                     {{ appointmentObj.service_type.service_category.category}}
                                                 </td>
@@ -133,6 +145,7 @@ import axios from 'axios';
 import { db } from '../../db';
 import Dexie from 'dexie';
 import { Modal, initDropdowns, initCollapses, initDismisses } from 'flowbite';
+import { getTableData } from '@/helper';
 
 export default {
   "name": "AppointmentApproval",
@@ -141,7 +154,8 @@ export default {
       appointmentObjs: [],
       moment:this.$moment,
       pageNumber: null,
-      pages: null
+      pages: null,
+      search: '',
     }
   },
   async created() {
@@ -153,51 +167,32 @@ export default {
     initDismisses();
     initCollapses();
     initDropdowns();
-
-    window.addEventListener('offline', () => {
-    //   this.isOffline = true;
-    });
-
-    window.addEventListener('online', async () => {
-    // sync up a user's data with an external api
-    //   this.syncAppointmentData(this.isOffline);
-    });
   },
   methods: {
-    async tableData(pageNumber=1) {
+    async tableData(pageNumber=1, search) {
       this.pageNumber = pageNumber;
-      let newOffset = pageNumber === 1 ? 0 : (pageNumber - 1) * 10;
 
-      let  appointmentObj = db.appointmentCatalog;
-
-      let data = new Dexie.Promise(function (resolve, reject) {
-        return appointmentObj.reverse()
-          .offset(newOffset)
-          .limit(10)
-          .toArray()
-          .then(function(e) {
-            let filteredAppointment = e.filter(appointmentCat => appointmentCat.approval_status !== null)
-            resolve(filteredAppointment);
-        }).catch((e) => reject(e));        
-      });
-
-      let numberOfRecords = new Dexie.Promise((resolve, reject) => {
-          resolve(appointmentObj.where('approval_status').anyOf([1, 0]).count());
-      });
-
-      let appointmentRecords = await  Promise.all([numberOfRecords, data]);
-  
-      return {
-        totalRecords: appointmentRecords[0],
-        pages: Math.ceil(appointmentRecords[0]/10),
-        data: appointmentRecords[1]
-      };
+      let filterRecords = db.appointmentCatalog.where('approval_status').anyOf(['1', '0'])
+        .reverse()
+        .filter(function (value) {
+          if (search !== undefined && search !== '') {
+            return value.service_type.type.toLowerCase().includes(search.toLowerCase()) 
+              || value.service_type.service_category.category.toLowerCase().includes(search.toLowerCase())
+              || value.branch.name.toLowerCase().includes(search.toLowerCase())
+              || value.user.FullName.toLowerCase().includes(search.toLowerCase())
+              || value.appointment_date.includes(search)
+          } else {
+            return value;
+          }
+        });       
+        // console.log(await getTableData(filterRecords, pageNumber))
+        return await getTableData(filterRecords, pageNumber);
     },
 
     async navigateTable(pageNumber) {
       this.pageNumber = pageNumber >= 1 && pageNumber <= this.pages ? pageNumber : pageNumber - 1;
       console.log(this.pageNumber);
-      this.appointmentObjs = await this.tableData(this.pageNumber);
+      this.appointmentObjs = await this.tableData(this.pageNumber, this.search);
 
       
       let prevButton = null;
@@ -216,7 +211,7 @@ export default {
     async prevRecord(pageNumber) {
       this.pageNumber = pageNumber >= 1 ? pageNumber : pageNumber + 1;
       console.log(this.pageNumber);
-      this.appointmentObjs = await this.tableData(this.pageNumber);
+      this.appointmentObjs = await this.tableData(this.pageNumber, this.search);
 
       let prevButton = null;
       const wrapper = document.getElementById("paginate-parent");
@@ -235,7 +230,7 @@ export default {
     async nextRecord(pageNumber) {
       this.pageNumber = pageNumber <= this.pages ? pageNumber : pageNumber - 1;
       console.log(this.pageNumber);
-      this.appointmentObjs = await this.tableData(this.pageNumber);
+      this.appointmentObjs = await this.tableData(this.pageNumber, this.search);
 
       let prevButton = null;
       const wrapper = document.getElementById("paginate-parent");
@@ -294,6 +289,12 @@ export default {
       modal.hide();
       document.querySelectorAll('*[modal-backdrop]').forEach(backdrop => backdrop.className = 'hidden');
     },
+  },
+  watch: {
+    async search(searchInput) {
+      this.appointmentObjs = await this.tableData(1, searchInput);
+      this.pages = this.appointmentObjs.pages;
+    }
   },
 }
 </script>

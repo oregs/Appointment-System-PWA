@@ -69,13 +69,8 @@ const store = createStore({
                 }
             }).catch((e) => console.error('Unable to logout user: ' + e));
         },
+        
         darkModeToggle() {
-            if (localStorage.getItem('color-theme') === 'dark') {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.add('light');
-            }
-
             const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
             const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
 
@@ -89,68 +84,54 @@ const store = createStore({
                     themeToggleDarkIcon.classList.remove('hidden');
                 }
             }
+            // toggle icons
+            themeToggleDarkIcon.classList.toggle('hidden');
+            themeToggleLightIcon.classList.toggle('hidden');
 
-            const themeToggleBtn = document.getElementById('theme-toggle');
-    
-            // let event = new Event('dark-mode');
-
-            if (themeToggleBtn) {
-                themeToggleBtn.addEventListener('click', function() {
-                    // toggle icons
-                    themeToggleDarkIcon.classList.toggle('hidden');
-                    themeToggleLightIcon.classList.toggle('hidden');
-
-                    // if set via local storage previously
-                    if (localStorage.getItem('color-theme')) {
-                        console.log(localStorage.getItem('color-theme'));
-                        if (localStorage.getItem('color-theme') === 'dark') {
-                            document.documentElement.classList.remove('dark');
-                            document.documentElement.classList.add('light');
-                            localStorage.setItem('color-theme', 'light');
-                        } else {
-                            document.documentElement.classList.remove('light');
-                            document.documentElement.classList.add('dark');
-                            localStorage.setItem('color-theme', 'dark');
-                        }
-                    } else {
-                        document.documentElement.classList.remove('light');
-                        document.documentElement.classList.add('dark');
-                        localStorage.setItem('color-theme', 'dark');
-                    }
-
-                    // document.dispatchEvent(event);
-                });
-            }
-        },
-        sidebarToggle() {
-            const sidebar = document.getElementById('sidebar');
-            if (sidebar) {
-                const toggleSidebarMobile = (sidebar, sidebarBackdrop, toggleSidebarMobileHamburger, toggleSidebarMobileClose) => {
-                    sidebar.classList.toggle('hidden');
-                    sidebarBackdrop.classList.toggle('hidden');
-                    toggleSidebarMobileHamburger.classList.toggle('hidden');
-                    toggleSidebarMobileClose.classList.toggle('hidden');
+            // if set via local storage previously
+            if (localStorage.getItem('color-theme')) {
+                console.log(localStorage.getItem('color-theme'));
+                if (localStorage.getItem('color-theme') === 'dark') {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.classList.add('light');
+                    localStorage.setItem('color-theme', 'light');
+                } else {
+                    document.documentElement.classList.remove('light');
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('color-theme', 'dark');
                 }
-                
-                const toggleSidebarMobileEl = document.getElementById('toggleSidebarMobile');
-                const sidebarBackdrop = document.getElementById('sidebarBackdrop');
-                const toggleSidebarMobileHamburger = document.getElementById('toggleSidebarMobileHamburger');
-                const toggleSidebarMobileClose = document.getElementById('toggleSidebarMobileClose');
-                // const toggleSidebarMobileSearch = document.getElementById('toggleSidebarMobileSearch');
-                
-                // toggleSidebarMobileSearch.addEventListener('click', () => {
-                //     toggleSidebarMobile(sidebar, sidebarBackdrop, toggleSidebarMobileHamburger, toggleSidebarMobileClose);
-                // });
-                
-                toggleSidebarMobileEl.addEventListener('click', () => {
-                    toggleSidebarMobile(sidebar, sidebarBackdrop, toggleSidebarMobileHamburger, toggleSidebarMobileClose);
-                });
-                
-                sidebarBackdrop.addEventListener('click', () => {
-                    toggleSidebarMobile(sidebar, sidebarBackdrop, toggleSidebarMobileHamburger, toggleSidebarMobileClose);
-                });
+            } else {
+                document.documentElement.classList.remove('light');
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('color-theme', 'dark');
             }
         },
+
+        toggleSidebar({ dispatch, commit }) {
+            dispatch('sidebarToggle', {
+                sidebar: document.getElementById('sidebar'),
+                toggleSidebarMobileHamburger: document.getElementById('toggleSidebarMobileHamburger'),
+                toggleSidebarMobileClose: document.getElementById('toggleSidebarMobileClose'),
+                // sidebarBackdrop: document.getElementById('sidebarBackdrop'),
+            });
+        },
+
+        sidebarBackdrop({ dispatch, commit }) {
+            dispatch('sidebarToggle', {
+                sidebar: document.getElementById('sidebar'),
+                toggleSidebarMobileHamburger: document.getElementById('toggleSidebarMobileHamburger'),
+                toggleSidebarMobileClose: document.getElementById('toggleSidebarMobileClose'),
+                // sidebarBackdrop: document.getElementById('sidebarBackdrop'),
+            });
+        },
+
+        sidebarToggle({ commit }, context) {
+            context.sidebar.classList.toggle('hidden');
+            // context.sidebarBackdrop.classList.toggle('hidden');
+            context.toggleSidebarMobileHamburger.classList.toggle('hidden');
+            context.toggleSidebarMobileClose.classList.toggle('hidden');
+        },
+
         async postToServer ({ commit }, table, url, index, value) {
             return await db[table].where(index).equals(value).toArray().then(async data => {
               if(data.length > 0) {
