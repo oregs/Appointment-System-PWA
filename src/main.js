@@ -29,6 +29,7 @@ const store = createStore({
         return {
             isAdmin: false,
             isAuthenticated: false,
+            user: null,
             service_categories: [],
             service_types: [],
             branches: [],
@@ -53,7 +54,10 @@ const store = createStore({
         },
         updateIsOffline(state, isOffline) {
             state.isOffline = isOffline;
-        }
+        },
+        setUser(state, user) {
+            state.user = JSON.parse(user);
+        },
     },
     actions: {
         async logout({ commit }) {

@@ -65,6 +65,7 @@ export default {
 
                 this.$store.commit('setIsAdmin', res.data.user.isAdmin);
                 this.$store.commit('setIsAuthenticated', res.data.token ? true : false);
+                this.$store.commit('setUser', localStorage.getItem('user')); 
                 
                 if (res.data.user.isAdmin) {
                     this.$router.push('/admin-dashboard');
