@@ -9,10 +9,10 @@
                 <svg id="toggleSidebarMobileHamburger" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg>
                 <svg id="toggleSidebarMobileClose" class="hidden w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
             </button>
-            <a href="#" class="flex ml-2 md:mr-24">
-            <img src="https://flowbite-admin-dashboard.vercel.app/images/logo.svg" class="h-8 mr-3" alt="FlowBite Logo">
-            <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Appointment Sys</span>
-            </a>
+            <router-link to="/" class="flex ml-2 md:mr-24">
+                <img src="https://flowbite-admin-dashboard.vercel.app/images/logo.svg" class="h-8 mr-3" alt="FlowBite Logo">
+                <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Appointment Sys</span>
+            </router-link>
         </div>
         <div class="flex items-center">
             <div class="hidden mr-3 -mb-1 sm:block">
@@ -32,25 +32,21 @@
                 <div>
                 <button type="button" class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600" id="user-menu-button-2" aria-expanded="false" data-dropdown-toggle="dropdown-2">
                     <span class="sr-only">Open user menu</span>
-                    <img class="w-8 h-8 rounded-full" src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="user photo">
+                    <img class="w-8 h-8 rounded-full" src="/img/avatar.png" alt="user photo">
                 </button>
                 </div>
                 
                 <div class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded shadow dark:bg-gray-700 dark:divide-gray-600" id="dropdown-2" data-popper-placement="bottom" style="position: absolute; inset: 0px auto auto 0px; margin: 0px; transform: translate(1313px, 97px);">
                 <div class="px-4 py-3" role="none">
-                    <p class="text-sm text-gray-900 dark:text-white" role="none">
-                    Oregs Segun
-                    </p>
-                    <p class="text-sm font-medium text-gray-900 truncate dark:text-gray-300" role="none">
-                    oregsgraphix@gmail.com
-                    </p>
+                    <p class="text-sm text-gray-900 dark:text-white" role="none">{{ fullName }}</p>
+                    <p class="text-sm font-medium text-gray-900 truncate dark:text-gray-300" role="none">{{ $store.state.user?.email }}</p>
                 </div>
                 <ul class="py-1" role="none">
                     <li>
-                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Profile</a>
+                    <router-link to="/profile" v-if="!$store.state.isAdmin" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Profile</router-link>
                     </li>
                     <li>
-                    <a href="#"  @click="$store.dispatch('logout')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Logout</a>
+                    <a href="#" @click="$store.dispatch('logout')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Logout</a>
                     </li>
                 </ul>
                 </div>
@@ -154,51 +150,57 @@
 <script>
 
 export default {
-  name: 'App',
-  components: {
-  },
-  data() {
-    return {
+    name: 'App',
+    components: {
+    },
+    data() {
+        return {
+        }
+    },
+    mounted() {     
+        if (localStorage.getItem('color-theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.add('light');
+        }
+
+        // Update isOffline status
+        window.addEventListener('offline', () => {
+            this.$store.commit('updateIsOffline', true);
+        });
+
+        window.addEventListener('online', async () => {
+            this.$store.commit('updateIsOffline', false);
+        });
+    },
+    created() {
+        this.updateIsAuthenticated();
+    },
+    methods: {
+        updateIsAuthenticated() {
+        const getUser = localStorage.getItem('user');
+        const user = JSON.parse(getUser);
+        const token = localStorage.getItem('token');
+
+        this.$store.commit('setIsAdmin', user ? user.isAdmin : false);
+        this.$store.commit('setIsAuthenticated', token ? true : false);
+        this.$store.commit('setUser', localStorage.getItem('user'));
+        },
+        toggleSidebar() {
+            this.$store.dispatch('toggleSidebar');
+        },
+        backdropToggle() {
+            this.$store.dispatch('sidebarBackdrop');
+        },
+        darklightToggle() {
+            this.$store.dispatch('darkModeToggle');
+        },
+    },
+    computed: {
+        fullName: function () {
+            return this.$store.state.user?.title+'. '+this.$store.state.user?.FullName
+        }
     }
-  },
-  mounted() {  
-    if (localStorage.getItem('color-theme') === 'dark') {
-        document.documentElement.classList.add('dark');
-    } else {
-        document.documentElement.classList.add('light');
-    }
-
-    // Update isOffline status
-    window.addEventListener('offline', () => {
-        this.$store.commit('updateIsOffline', true);
-    });
-
-    window.addEventListener('online', async () => {
-        this.$store.commit('updateIsOffline', false);
-    });
-  },
-  created() {
-    this.updateIsAuthenticated();
-  },
-  methods: {
-    updateIsAuthenticated() {
-      const getUser = localStorage.getItem('user');
-      const user = JSON.parse(getUser);
-      const token = localStorage.getItem('token');
-
-      this.$store.commit('setIsAdmin', user ? user.isAdmin : false);
-      this.$store.commit('setIsAuthenticated', token ? true : false);
-    },
-    toggleSidebar() {
-        this.$store.dispatch('toggleSidebar');
-    },
-    backdropToggle() {
-        this.$store.dispatch('sidebarBackdrop');
-    },
-    darklightToggle() {
-        this.$store.dispatch('darkModeToggle');
-    },
-  }
 }
 </script>
 

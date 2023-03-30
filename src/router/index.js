@@ -7,6 +7,11 @@ import ServiceCategory from '../views/admin/ServiceCategory';
 import ServiceType from '../views/admin/ServiceType';
 import Branch from '../views/admin/Branch';
 import AppointmentApproval from '../views/admin/AppointmentApproval';
+import ProfilePage from '../views/ProfilePage';
+import ForgotPassword from '../views/ForgotPassword';
+import PasswordExpired from '../views/PasswordExpired';
+import ResetPassword from '../views/ResetPassword';
+import NotFound from '../views/NotFound';
 import Test from '../views/Test';
 
 const routes = [
@@ -21,11 +26,41 @@ const routes = [
         component: Login
     },
     { 
+        path: '/forgot-password', 
+        name: 'ForgotPassword',
+        component: ForgotPassword
+    },
+    {
+        path: '/change-current-password',
+        name: 'ResetPassword',
+        component: ResetPassword
+    },
+    {
+        path: '/reset-password-expired',
+        name: 'PasswordExpired',
+        component: PasswordExpired
+    },
+    { 
+        path: '/pages/404', 
+        name: 'NotFound',
+        component: NotFound
+    },
+    { 
         path: '/appointment', 
         name: 'Appointment', 
         component: Appointment,
         meta: {
             requiresAuth: true,
+            roles: ['user']
+        },
+    },
+    { 
+        path: '/profile', 
+        name: 'ProfilePage', 
+        component: ProfilePage,
+        meta: {
+            requiresAuth: true,
+            roles: ['user']
         },
     },
     {
@@ -34,6 +69,7 @@ const routes = [
         component: AdminDashboard,
         meta: {
             requiresAuth: true,
+            roles: ['admin']
         }
     },
     {
@@ -42,6 +78,7 @@ const routes = [
         component: AppointmentApproval,
         meta: {
             requiresAuth: true,
+            roles: ['admin']
         }
     },
     {
@@ -50,6 +87,7 @@ const routes = [
         component: ServiceCategory,
         meta: {
             requiresAuth: true,
+            roles: ['admin']
         }
     },
     {
@@ -58,6 +96,7 @@ const routes = [
         component: ServiceType,
         meta: {
             requiresAuth: true,
+            roles: ['admin']
         }
     },
     {
@@ -66,6 +105,7 @@ const routes = [
         component: Branch,
         meta: {
             requiresAuth: true,
+            roles: ['admin']
         }
     },
     {
@@ -86,10 +126,16 @@ router.beforeEach((to, from) => {
     const user = JSON.parse(getUser);
     const token = localStorage.getItem('token');
 
+    // console.log(to.meta.roles, to,);
+
     if (to.matched.some(record => record.meta.requiresAuth)) {
         // this route requires auth, check if logged in
         if (token) {
-            return true;
+            if (to.meta.roles.some(v => user.roles.indexOf(v) !== -1)) {
+                return true
+            } else {
+                return user.isAdmin ?  { path: '/admin-dashboard' } : { path: '/appointment' };
+            }
         } else {
             // if not, redirect to login page.
             return {
@@ -102,7 +148,6 @@ router.beforeEach((to, from) => {
 
     if (token && user) {
         return user.isAdmin ?  { path: '/admin-dashboard' } : { path: '/appointment' };
-        // return user.isAdmin ?  { path: '/admin-dashboard' } : { path: '/appointment' };
     }
 });
 
