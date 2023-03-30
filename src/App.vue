@@ -32,18 +32,14 @@
                 <div>
                 <button type="button" class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600" id="user-menu-button-2" aria-expanded="false" data-dropdown-toggle="dropdown-2">
                     <span class="sr-only">Open user menu</span>
-                    <img class="w-8 h-8 rounded-full" src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="user photo">
+                    <img class="w-8 h-8 rounded-full" src="/img/avatar.png" alt="user photo">
                 </button>
                 </div>
                 
                 <div class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded shadow dark:bg-gray-700 dark:divide-gray-600" id="dropdown-2" data-popper-placement="bottom" style="position: absolute; inset: 0px auto auto 0px; margin: 0px; transform: translate(1313px, 97px);">
                 <div class="px-4 py-3" role="none">
-                    <p class="text-sm text-gray-900 dark:text-white" role="none">
-                    Oregs Segun
-                    </p>
-                    <p class="text-sm font-medium text-gray-900 truncate dark:text-gray-300" role="none">
-                    oregsgraphix@gmail.com
-                    </p>
+                    <p class="text-sm text-gray-900 dark:text-white" role="none">{{ fullName }}</p>
+                    <p class="text-sm font-medium text-gray-900 truncate dark:text-gray-300" role="none">{{ $store.state.user?.email }}</p>
                 </div>
                 <ul class="py-1" role="none">
                     <li>
@@ -154,52 +150,57 @@
 <script>
 
 export default {
-  name: 'App',
-  components: {
-  },
-  data() {
-    return {
+    name: 'App',
+    components: {
+    },
+    data() {
+        return {
+        }
+    },
+    mounted() {     
+        if (localStorage.getItem('color-theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.add('light');
+        }
+
+        // Update isOffline status
+        window.addEventListener('offline', () => {
+            this.$store.commit('updateIsOffline', true);
+        });
+
+        window.addEventListener('online', async () => {
+            this.$store.commit('updateIsOffline', false);
+        });
+    },
+    created() {
+        this.updateIsAuthenticated();
+    },
+    methods: {
+        updateIsAuthenticated() {
+        const getUser = localStorage.getItem('user');
+        const user = JSON.parse(getUser);
+        const token = localStorage.getItem('token');
+
+        this.$store.commit('setIsAdmin', user ? user.isAdmin : false);
+        this.$store.commit('setIsAuthenticated', token ? true : false);
+        this.$store.commit('setUser', localStorage.getItem('user'));
+        },
+        toggleSidebar() {
+            this.$store.dispatch('toggleSidebar');
+        },
+        backdropToggle() {
+            this.$store.dispatch('sidebarBackdrop');
+        },
+        darklightToggle() {
+            this.$store.dispatch('darkModeToggle');
+        },
+    },
+    computed: {
+        fullName: function () {
+            return this.$store.state.user?.title+'. '+this.$store.state.user?.FullName
+        }
     }
-  },
-  mounted() {     
-    if (localStorage.getItem('color-theme') === 'dark') {
-        document.documentElement.classList.add('dark');
-    } else {
-        document.documentElement.classList.add('light');
-    }
-
-    // Update isOffline status
-    window.addEventListener('offline', () => {
-        this.$store.commit('updateIsOffline', true);
-    });
-
-    window.addEventListener('online', async () => {
-        this.$store.commit('updateIsOffline', false);
-    });
-  },
-  created() {
-    this.updateIsAuthenticated();
-  },
-  methods: {
-    updateIsAuthenticated() {
-      const getUser = localStorage.getItem('user');
-      const user = JSON.parse(getUser);
-      const token = localStorage.getItem('token');
-
-      this.$store.commit('setIsAdmin', user ? user.isAdmin : false);
-      this.$store.commit('setIsAuthenticated', token ? true : false);
-      this.$store.commit('setUser', localStorage.getItem('user'));
-    },
-    toggleSidebar() {
-        this.$store.dispatch('toggleSidebar');
-    },
-    backdropToggle() {
-        this.$store.dispatch('sidebarBackdrop');
-    },
-    darklightToggle() {
-        this.$store.dispatch('darkModeToggle');
-    },
-  }
 }
 </script>
 

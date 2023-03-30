@@ -8,6 +8,10 @@ import ServiceType from '../views/admin/ServiceType';
 import Branch from '../views/admin/Branch';
 import AppointmentApproval from '../views/admin/AppointmentApproval';
 import ProfilePage from '../views/ProfilePage';
+import ForgotPassword from '../views/ForgotPassword';
+import PasswordExpired from '../views/PasswordExpired';
+import ResetPassword from '../views/ResetPassword';
+import NotFound from '../views/NotFound';
 import Test from '../views/Test';
 
 const routes = [
@@ -20,6 +24,26 @@ const routes = [
         path: '/', 
         name: 'Login',
         component: Login
+    },
+    { 
+        path: '/forgot-password', 
+        name: 'ForgotPassword',
+        component: ForgotPassword
+    },
+    {
+        path: '/change-current-password',
+        name: 'ResetPassword',
+        component: ResetPassword
+    },
+    {
+        path: '/reset-password-expired',
+        name: 'PasswordExpired',
+        component: PasswordExpired
+    },
+    { 
+        path: '/pages/404', 
+        name: 'NotFound',
+        component: NotFound
     },
     { 
         path: '/appointment', 

@@ -4,8 +4,8 @@
             <div class="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
                 <div class="px-7 pt-6 mb-2">
                     <div class="flex space-x-4">
-                        <img class="w-8 h-8 rounded-full" src="https://flowbite-admin-dashboard.vercel.app/images/users/bonnie-green.png" alt="Bonnie image">
-                        <h2 class="mb-3 text-2xl font-bold text-gray-900 dark:text-white">{{ $store.state.user?.FullName }}</h2>
+                        <img class="w-8 h-8 rounded-full" src="/img/avatar.png" alt="Bonnie image">
+                        <h2 class="mb-3 text-2xl font-bold text-gray-900 dark:text-white">{{ fullName }}</h2>
                     </div>
                     <p class="text-base font-normal text-gray-500 dark:text-gray-400">
                         {{ $store.state.user.email }}
@@ -54,10 +54,11 @@
                         >Update
                         </button>
                     </form>
-                
+                    <br>
                     <form  @submit.prevent="handleChangePasswordSubmit()" class="mt-8 space-y-6" action="#">
-                        <span class="text-base text-lg text-bold text-white font-normal text-gray-500 dark:text-gray-400">
-                            <h2>Change Password</h2>
+                        <span class="text-base font-normal text-gray-500 dark:text-gray-400">
+                            <h2 class="text-lg text-gray-900 dark:text-white mb-2">Change Password</h2>
+                            <hr>
                         </span>
                         <div>
                             <label for="currentPassword" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Current Password </label>
@@ -135,7 +136,8 @@ export default {
     created() {
         this.first_name = this.$store.state.user.first_name
         this.last_name = this.$store.state.user.last_name
-        this.title = this.$store.state.user.title
+        this.title = this.$store.state.user.title,
+        this.fullName = this.$store.state.user.full_name
     },
     mounted() {
         
@@ -170,11 +172,11 @@ export default {
                 }).then(async () => {
                     // Fetch latest record and update localStorage
                     localStorage.setItem('user', JSON.stringify(res.data.user));
-                    this.$store.commit('setUser', res.data.user);
+                    this.$store.commit('setUser', JSON.stringify(res.data.user));
                 });
             }).catch((err) => {
                 if (err.response.data.status.first_name) {
-                    console.error(err.response.data.status.first_name);
+                    // console.error(err.response.data.status.first_name);
                     let firstName = document.getElementById('firstNameCheck');
                         firstName.classList.remove('hidden');
                         firstName.innerHTML = err.response.data.status.first_name;
@@ -195,7 +197,6 @@ export default {
                     old_password: this.old_password,
                     new_password: this.new_password
                 }).then((res) => {
-                    console.log(res);
                     if (res.data.status === 'success') {
                         this.$swal.fire({
                             title: 'Success',
@@ -208,7 +209,6 @@ export default {
                         });                    
                     }
                 }).catch((err) => {
-                    console.log(err)
                     let new_password = document.getElementById('oldPasswordCheck');
                     new_password.classList.remove('hidden');
                     new_password.innerHTML = err.response.data.message;
@@ -221,15 +221,20 @@ export default {
             if (toggle === 'hide') {
                 document.getElementById('toggleEyeShow').classList.add('hidden');
                 document.getElementById('toggleEyeHide').classList.remove('hidden');
-                password.type = 'text'
+                password.type = 'text';
             } else {
                 document.getElementById('toggleEyeHide').classList.add('hidden');
                 document.getElementById('toggleEyeShow').classList.remove('hidden');
                 password.type = 'password';
             }
 
-            password.focus()
+            password.focus();
         },
     },
+    computed: {
+        fullName: function () {
+            return this.$store.state.user?.title+'. '+this.$store.state.user?.FullName
+        }
+    }
 }
 </script>
